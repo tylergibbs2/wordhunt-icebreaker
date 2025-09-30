@@ -73,11 +73,6 @@ export const useTileSelection = (
         return;
       }
 
-      // Don't allow selecting a tile that's already in the selection
-      if (isTileSelected(row, col)) {
-        return;
-      }
-
       // Check if pointer is close enough to tile center
       if (!isPointerCloseToTileCenter(clientX, clientY, row, col)) {
         return;
@@ -88,21 +83,30 @@ export const useTileSelection = (
         setSelectedTiles([newTile]);
         setLastProcessedTile(newTile);
       } else {
-        // Check if the new tile is adjacent to the last selected tile
         const lastTile = selectedTiles[selectedTiles.length - 1];
-        if (areAdjacent(lastTile, newTile)) {
-          setSelectedTiles(prev => [...prev, newTile]);
-          setLastProcessedTile(newTile);
+
+        // Check if the new tile is already in the selection (backtracking)
+        const existingTileIndex = selectedTiles.findIndex(
+          tile => tile.row === row && tile.col === col
+        );
+
+        if (existingTileIndex !== -1) {
+          // Backtracking: remove tiles from the end until we reach the existing tile
+          if (existingTileIndex < selectedTiles.length - 1) {
+            setSelectedTiles(prev => prev.slice(0, existingTileIndex + 1));
+            setLastProcessedTile(newTile);
+          }
+          // If it's the last tile, do nothing (already at the end)
+        } else {
+          // Forward movement: check if the new tile is adjacent to the last selected tile
+          if (areAdjacent(lastTile, newTile)) {
+            setSelectedTiles(prev => [...prev, newTile]);
+            setLastProcessedTile(newTile);
+          }
         }
       }
     },
-    [
-      selectedTiles,
-      areAdjacent,
-      lastProcessedTile,
-      isTileSelected,
-      isPointerCloseToTileCenter,
-    ]
+    [selectedTiles, areAdjacent, lastProcessedTile, isPointerCloseToTileCenter]
   );
 
   // Clear all selections
