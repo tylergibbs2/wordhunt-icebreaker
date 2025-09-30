@@ -29,12 +29,16 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.get("/health")
+    async def health_check() -> dict[str, str]:
+        return {"status": "healthy", "environment": config.environment}
+
     # Include API router
     app.include_router(api_router)
 
     # Serve static files from frontend directory
     if config.should_serve_frontend():
-        app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="static")
+        app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
 
     return app
 
