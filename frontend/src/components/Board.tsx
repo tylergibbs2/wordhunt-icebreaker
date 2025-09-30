@@ -243,10 +243,12 @@ export const Board = () => {
                   new Map(prev).set(cellKey, newCount)
                 );
 
-                // Generate new letter with updated replacement count
+                // Generate new letter with updated replacement count and original letter
+                const originalLetter = prevBoard[tile.row][tile.col];
                 newBoard[tile.row][tile.col] = generateRandomLetter(
                   { row: tile.row, col: tile.col },
-                  newCount
+                  newCount,
+                  originalLetter
                 );
 
                 // Trigger fade-in animation for the new character
@@ -351,9 +353,11 @@ export const Board = () => {
   };
 
   // Generate a deterministic random letter (A-Z) using seed and replacement count
+  // Replace with same type (vowel/consonant) as original letter
   const generateRandomLetter = (
     position: { row: number; col: number },
-    replacementCount: number = 0
+    replacementCount: number = 0,
+    originalLetter: string
   ) => {
     if (!seed) return String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Fallback
 
@@ -362,12 +366,22 @@ export const Board = () => {
       seed + position.row * 1000 + position.col + replacementCount * 10000;
     const random = seededRandom(positionSeed);
 
-    // Generate multiple random numbers to ensure good distribution
-    for (let i = 0; i < 10; i++) {
-      random();
-    }
+    // Define vowels and consonants
+    const vowels = ['A', 'E', 'I', 'O', 'U'];
+    const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'];
 
-    return String.fromCharCode(65 + Math.floor(random() * 26)); // A-Z
+    // Check if original letter was a vowel
+    const wasVowel = vowels.includes(originalLetter.toUpperCase());
+
+    if (wasVowel) {
+      // Replace with a different vowel
+      const otherVowels = vowels.filter(v => v !== originalLetter.toUpperCase());
+      return otherVowels[Math.floor(random() * otherVowels.length)];
+    } else {
+      // Replace with a different consonant
+      const otherConsonants = consonants.filter(c => c !== originalLetter.toUpperCase());
+      return otherConsonants[Math.floor(random() * otherConsonants.length)];
+    }
   };
 
   // Update board dimensions when component mounts or board changes
