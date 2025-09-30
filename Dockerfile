@@ -44,6 +44,7 @@ FROM python:3.12-slim AS production
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for production
@@ -68,6 +69,10 @@ COPY --from=frontend-builder /app/frontend/dist ./app/static
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 ENV ENVIRONMENT="production"
+ENV TZ="America/Chicago"
+
+# Set system timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Create necessary directories and set permissions
 RUN mkdir -p /app/logs && \
