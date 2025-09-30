@@ -94,6 +94,70 @@ export const Board = () => {
         `Word: "${word}", Valid: ${isValid}, Already Used: ${isAlreadyUsed}`
       );
 
+      // Check for "too short" first
+      if (word.length < 3) {
+        console.log(`"${word}" is too short!`);
+
+        // Shake the selected tiles
+        const tileKeys = selectedTiles.map(tile => `${tile.row}-${tile.col}`);
+        setShakingTiles(new Set(tileKeys));
+
+        // Stop shaking after animation
+        setTimeout(() => {
+          setShakingTiles(new Set());
+        }, 500);
+
+        // Show error popup
+        const errorId = `error-${Date.now()}`;
+        const errorPosition = {
+          x: Math.random() * (boardDimensions.width - 200) + 100,
+          y: Math.random() * (boardDimensions.height - 100) + 50,
+        };
+
+        setErrorPopups(prev => [
+          ...prev,
+          {
+            id: errorId,
+            message: 'Too short!',
+            position: errorPosition,
+          },
+        ]);
+
+        return;
+      }
+
+      // Check for "not a word"
+      if (!isValid) {
+        console.log(`"${word}" is not a valid word!`);
+
+        // Shake the selected tiles
+        const tileKeys = selectedTiles.map(tile => `${tile.row}-${tile.col}`);
+        setShakingTiles(new Set(tileKeys));
+
+        // Stop shaking after animation
+        setTimeout(() => {
+          setShakingTiles(new Set());
+        }, 500);
+
+        // Show error popup
+        const errorId = `error-${Date.now()}`;
+        const errorPosition = {
+          x: Math.random() * (boardDimensions.width - 200) + 100,
+          y: Math.random() * (boardDimensions.height - 100) + 50,
+        };
+
+        setErrorPopups(prev => [
+          ...prev,
+          {
+            id: errorId,
+            message: 'Not a word!',
+            position: errorPosition,
+          },
+        ]);
+
+        return;
+      }
+
       // If word is valid but already used, show feedback
       if (isValid && isAlreadyUsed) {
         console.log(`"${word}" has already been used!`);
