@@ -37,6 +37,17 @@ export const StartupPopup: React.FC<StartupPopupProps> = ({
         i
       </button>
 
+      {/* GitHub link positioned at bottom right */}
+      <a
+        href="https://github.com/tylergibbs2/wordhunt-icebreaker"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="github-link-page"
+        title="View source code on GitHub"
+      >
+        GitHub
+      </a>
+
       <div className="startup-popup">
         <div className="startup-popup-content">
           <h1 className="startup-title">Word Hunt: Icebreaker</h1>

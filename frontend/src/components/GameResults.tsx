@@ -88,11 +88,7 @@ export const GameResults: React.FC<GameResultsProps> = ({
       <div className="game-results">
         <div className="results-header">
           <h1 className="results-title">{title}</h1>
-          {day && (
-            <div className="day-display">
-              📅 Day {day}
-            </div>
-          )}
+          {day && <div className="day-display">📅 Day {day}</div>}
           <div className="score-summary">
             <div className="max-score">Max Score: {maxScore}</div>
             <div className="total-score">Total Score: {totalScore}</div>
@@ -143,6 +139,15 @@ export const GameResults: React.FC<GameResultsProps> = ({
 
         <div className="disclaimer">
           <p>Come back tomorrow for a new game!</p>
+          <a
+            href="https://github.com/tylergibbs2/wordhunt-icebreaker"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="github-link"
+            title="View source code on GitHub"
+          >
+            GitHub
+          </a>
         </div>
       </div>
     </div>

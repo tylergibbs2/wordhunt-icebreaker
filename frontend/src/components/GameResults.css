@@ -268,3 +268,19 @@
     margin-bottom: 0.5rem;
   }
 }
+
+/* GitHub link styling */
+.github-link {
+  font-size: 0.7rem;
+  color: #666666;
+  text-decoration: none;
+  font-family: 'Courier New', monospace;
+  transition: color 0.2s ease;
+  margin-top: 0.5rem;
+  display: inline-block;
+}
+
+.github-link:hover {
+  color: #999999;
+  text-decoration: underline;
+}

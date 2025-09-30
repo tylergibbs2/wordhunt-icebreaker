@@ -48,6 +48,7 @@
   padding: 2rem;
   text-align: center;
   max-width: 400px;
+  position: relative;
   width: 90%;
 }
 
@@ -272,4 +273,22 @@
   .info-section ul {
     padding-left: 1rem;
   }
+}
+
+/* GitHub link styling */
+.github-link-page {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  font-size: 0.7rem;
+  color: #cccccc;
+  text-decoration: none;
+  font-family: 'Courier New', monospace;
+  transition: color 0.2s ease;
+  z-index: 2001;
+}
+
+.github-link-page:hover {
+  color: #ffffff;
+  text-decoration: underline;
 }
