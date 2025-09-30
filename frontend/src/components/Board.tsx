@@ -64,6 +64,23 @@ export const Board = () => {
     setErrorPopups(prev => prev.filter(popup => popup.id !== id));
   };
 
+  // Function to get path color based on word validity
+  const getPathColor = (tiles: typeof selectedTiles) => {
+    if (tiles.length === 0) return '#60a5fa'; // Default blue
+
+    // Build word from selected tiles
+    const word = tiles
+      .map(tile => currentBoard[tile.row]?.[tile.col] || '')
+      .join('')
+      .toLowerCase();
+
+    // Check word validity
+    if (word.length < 3) return '#9ca3af'; // Gray for too short
+    if (!isWord(word)) return '#9ca3af'; // Gray for invalid word
+    if (usedWords.has(word)) return '#fbbf24'; // Yellow for already used
+    return '#10b981'; // Green for valid word
+  };
+
   // Function to remove a pixel explosion when it completes
   const removePixelExplosion = (id: string) => {
     setPixelExplosions(prev => prev.filter(explosion => explosion.id !== id));
@@ -594,6 +611,7 @@ export const Board = () => {
           selectedTiles={selectedTiles}
           boardDimensions={boardDimensions}
           gridSize={currentBoard?.length || 0}
+          pathColor={getPathColor(selectedTiles)}
         />
       </div>
 

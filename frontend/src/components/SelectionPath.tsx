@@ -5,12 +5,14 @@ interface SelectionPathProps {
   selectedTiles: TilePosition[];
   boardDimensions: { width: number; height: number };
   gridSize: number;
+  pathColor?: string;
 }
 
 export const SelectionPath: React.FC<SelectionPathProps> = ({
   selectedTiles,
   boardDimensions,
   gridSize,
+  pathColor = '#60a5fa',
 }) => {
   if (
     selectedTiles.length === 0 ||
@@ -54,7 +56,7 @@ export const SelectionPath: React.FC<SelectionPathProps> = ({
                 y={coords.y - 8}
                 width="16"
                 height="16"
-                fill="#60a5fa"
+                fill={pathColor}
                 opacity="0.8"
               />
               {/* Inner highlight */}
@@ -63,7 +65,7 @@ export const SelectionPath: React.FC<SelectionPathProps> = ({
                 y={coords.y - 4}
                 width="8"
                 height="8"
-                fill="#93c5fd"
+                fill={pathColor}
                 opacity="0.9"
               />
             </>
@@ -84,7 +86,7 @@ export const SelectionPath: React.FC<SelectionPathProps> = ({
                 y={coords.y - 6}
                 width="12"
                 height="12"
-                fill="#60a5fa"
+                fill={pathColor}
                 opacity="0.8"
               />
             );
@@ -108,7 +110,7 @@ export const SelectionPath: React.FC<SelectionPathProps> = ({
                   y={coords1.y - 3}
                   width={Math.abs(coords2.x - coords1.x) + 6}
                   height="6"
-                  fill="#60a5fa"
+                  fill={pathColor}
                   opacity="0.8"
                 />
               );
@@ -121,7 +123,7 @@ export const SelectionPath: React.FC<SelectionPathProps> = ({
                   y={Math.min(coords1.y, coords2.y) - 3}
                   width="6"
                   height={Math.abs(coords2.y - coords1.y) + 6}
-                  fill="#60a5fa"
+                  fill={pathColor}
                   opacity="0.8"
                 />
               );
@@ -147,7 +149,7 @@ export const SelectionPath: React.FC<SelectionPathProps> = ({
                         y={y - 3}
                         width="6"
                         height="6"
-                        fill="#60a5fa"
+                        fill={pathColor}
                         opacity="0.8"
                       />
                     );
