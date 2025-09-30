@@ -51,6 +51,7 @@ export const Board = () => {
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [gameEnded, setGameEnded] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [wordHistory, setWordHistory] = useState<WordResult[]>([]);
 
   // Function to remove a score popup when its animation completes
@@ -333,7 +334,12 @@ export const Board = () => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
           setIsTimerActive(false);
-          setGameEnded(true);
+          // Start subtle transition
+          setIsTransitioning(true);
+          // Show results after fade
+          setTimeout(() => {
+            setGameEnded(true);
+          }, 500); // Short, subtle transition
           return 0;
         }
         return prev - 1;
@@ -366,21 +372,62 @@ export const Board = () => {
       seed + position.row * 1000 + position.col + replacementCount * 10000;
     const random = seededRandom(positionSeed);
 
-    // Define vowels and consonants
+    // Define vowels and consonants with frequency weights
     const vowels = ['A', 'E', 'I', 'O', 'U'];
-    const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'];
+
+    // Consonants with their relative frequency weights (based on English letter frequency)
+    const consonantWeights = [
+      { letter: 'R', weight: 9.58 },
+      { letter: 'S', weight: 6.33 },
+      { letter: 'T', weight: 9.06 },
+      { letter: 'N', weight: 6.75 },
+      { letter: 'L', weight: 4.03 },
+      { letter: 'C', weight: 2.78 },
+      { letter: 'D', weight: 4.25 },
+      { letter: 'M', weight: 2.41 },
+      { letter: 'P', weight: 2.29 },
+      { letter: 'H', weight: 6.09 },
+      { letter: 'G', weight: 2.02 },
+      { letter: 'B', weight: 1.29 },
+      { letter: 'F', weight: 2.23 },
+      { letter: 'Y', weight: 1.97 },
+      { letter: 'W', weight: 2.36 },
+      { letter: 'K', weight: 0.77 },
+      { letter: 'V', weight: 0.98 },
+      { letter: 'X', weight: 0.15 },
+      { letter: 'J', weight: 0.15 },
+      { letter: 'Q', weight: 0.1 },
+      { letter: 'Z', weight: 0.07 },
+    ];
 
     // Check if original letter was a vowel
     const wasVowel = vowels.includes(originalLetter.toUpperCase());
-
     if (wasVowel) {
       // Replace with a different vowel
-      const otherVowels = vowels.filter(v => v !== originalLetter.toUpperCase());
+      const otherVowels = vowels.filter(
+        v => v !== originalLetter.toUpperCase()
+      );
       return otherVowels[Math.floor(random() * otherVowels.length)];
     } else {
-      // Replace with a different consonant
-      const otherConsonants = consonants.filter(c => c !== originalLetter.toUpperCase());
-      return otherConsonants[Math.floor(random() * otherConsonants.length)];
+      // Replace with a different consonant using frequency weighting
+      const otherConsonants = consonantWeights.filter(
+        c => c.letter !== originalLetter.toUpperCase()
+      );
+
+      // Calculate total weight
+      const totalWeight = otherConsonants.reduce((sum, c) => sum + c.weight, 0);
+
+      // Generate weighted random selection
+      let randomValue = random() * totalWeight;
+      for (const consonant of otherConsonants) {
+        randomValue -= consonant.weight;
+        if (randomValue <= 0) {
+          return consonant.letter;
+        }
+      }
+
+      // Fallback to last consonant (should never reach here)
+      return otherConsonants[otherConsonants.length - 1].letter;
     }
   };
 
@@ -433,7 +480,7 @@ export const Board = () => {
   }
 
   return (
-    <div className="board-container">
+    <div className={`board-container ${isTransitioning ? 'transitioning' : ''}`}>
       {/* Timer */}
       <Timer
         duration={timerDuration || 90}
