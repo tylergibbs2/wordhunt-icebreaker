@@ -1,0 +1,58 @@
+.error-popup {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2000;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 0.8rem;
+  color: #ff6666;
+  text-shadow: 2px 2px 0px #000000;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ff6666;
+  border-radius: 3px;
+  padding: 0.3rem 0.5rem;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  box-shadow: 0 0 4px rgba(255, 102, 102, 0.2);
+  animation: subtle-error-glow 2s ease-in-out infinite alternate;
+}
+
+.error-popup.visible {
+  opacity: 1;
+}
+
+.error-popup.fading {
+  opacity: 0;
+}
+
+.error-icon {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #ff6666;
+  text-shadow: 1px 1px 0px #000000;
+}
+
+@keyframes subtle-error-glow {
+  0% {
+    box-shadow: 0 0 4px rgba(255, 102, 102, 0.2);
+    border-color: #ff6666;
+  }
+  100% {
+    box-shadow: 0 0 6px rgba(255, 102, 102, 0.3);
+    border-color: #ff8888;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .error-popup {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .error-icon {
+    font-size: 0.9rem;
+  }
+}

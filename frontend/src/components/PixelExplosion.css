@@ -1,0 +1,36 @@
+/* Epilepsy-Safe Retro Effect */
+.retro-glitch-effect {
+  animation: safeRetroEffect 1s ease-out forwards;
+  border-radius: 2px;
+  box-shadow: 0 0 8px currentColor;
+}
+
+@keyframes safeRetroEffect {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+    box-shadow: 0 0 8px currentColor;
+  }
+
+  30% {
+    transform: scale(1.2);
+    opacity: 0.9;
+    filter: brightness(1.3);
+    box-shadow: 0 0 15px currentColor;
+  }
+
+  60% {
+    transform: scale(0.8);
+    opacity: 0.7;
+    filter: brightness(0.8);
+    box-shadow: 0 0 20px currentColor;
+  }
+
+  100% {
+    transform: scale(0);
+    opacity: 0;
+    filter: brightness(0);
+    box-shadow: 0 0 0px currentColor;
+  }
+}

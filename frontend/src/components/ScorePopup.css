@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.score-popup {
+  position: absolute;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 1;
+  transform-origin: center;
+  transition: all 0.3s ease;
+}
+
+/* Common (0-99 points) - Green */
+.score-popup.common {
+  color: #00ff00;
+  text-shadow:
+    3px 3px 0px #000000,
+    0 0 8px rgba(0, 255, 0, 0.8);
+  font-weight: bold;
+}
+
+/* Uncommon (100-199 points) - Blue */
+.score-popup.uncommon {
+  color: #00aaff;
+  text-shadow:
+    3px 3px 0px #000000,
+    0 0 8px rgba(0, 170, 255, 0.8);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Rare (200-299 points) - Purple */
+.score-popup.rare {
+  color: #aa00ff;
+  text-shadow:
+    3px 3px 0px #000000,
+    0 0 8px rgba(170, 0, 255, 0.8);
+  font-size: 16px;
+  font-weight: bold;
+  animation: subtle-glow 2s ease-in-out infinite alternate;
+}
+
+/* Epic (300-499 points) - Orange with pulsing */
+.score-popup.epic {
+  color: #ff6600;
+  text-shadow:
+    3px 3px 0px #000000,
+    0 0 8px rgba(255, 102, 0, 0.8);
+  font-size: 18px;
+  font-weight: bold;
+  animation: subtle-pulse 1.5s ease-in-out infinite alternate;
+}
+
+/* Legendary (500+ points) - Rainbow effect */
+.score-popup.legendary {
+  font-size: 20px;
+  text-shadow:
+    3px 3px 0px #000000,
+    0 0 8px rgba(255, 255, 255, 0.8);
+  font-weight: bold;
+  animation: slow-rainbow 1.5s linear infinite;
+}
+
+.score-popup.visible {
+  opacity: 1;
+}
+
+.score-popup.fading {
+  opacity: 0;
+}
+
+/* Animations */
+@keyframes subtle-glow {
+  from {
+    text-shadow:
+      3px 3px 0px #000000,
+      0 0 8px rgba(170, 0, 255, 0.8);
+  }
+  to {
+    text-shadow:
+      3px 3px 0px #000000,
+      0 0 12px rgba(170, 0, 255, 1);
+  }
+}
+
+@keyframes subtle-pulse {
+  from {
+    text-shadow:
+      3px 3px 0px #000000,
+      0 0 8px rgba(255, 102, 0, 0.8);
+  }
+  to {
+    text-shadow:
+      3px 3px 0px #000000,
+      0 0 12px rgba(255, 102, 0, 1);
+  }
+}
+
+@keyframes slow-rainbow {
+  0% {
+    color: #ff0000;
+  }
+  20% {
+    color: #ff6600;
+  }
+  40% {
+    color: #ffff00;
+  }
+  60% {
+    color: #00ff00;
+  }
+  80% {
+    color: #0066ff;
+  }
+  100% {
+    color: #ff0000;
+  }
+}
