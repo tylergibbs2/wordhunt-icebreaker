@@ -4,6 +4,7 @@ import { DictionaryProvider } from './components/DictionaryProvider';
 import { Board } from './components/Board';
 import { StartupPopup } from './components/StartupPopup';
 import { GameResults, type WordResult } from './components/GameResults';
+import { Loading } from './components/Loading';
 import { queryClient } from './lib/queryClient';
 import { useBoard } from './hooks/useBoard';
 import { useDictionaryContext } from './components/DictionaryProvider';
@@ -21,7 +22,7 @@ function AppContent() {
   if (!showBoard) {
     if (!day) {
       // If no day from API, show loading or error
-      return <div>Loading...</div>;
+      return <Loading />;
     }
 
     const alreadyPlayed = hasPlayedToday(day);
