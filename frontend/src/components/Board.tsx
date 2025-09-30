@@ -561,7 +561,9 @@ export const Board = () => {
   }
 
   return (
-    <div className={`board-container ${isTransitioning ? 'transitioning' : ''}`}>
+    <div
+      className={`board-container ${isTransitioning ? 'transitioning' : ''}`}
+    >
       {/* Timer */}
       <Timer
         duration={timerDuration || 90}

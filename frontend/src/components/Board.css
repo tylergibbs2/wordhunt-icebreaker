@@ -9,7 +9,9 @@
   background-color: #000000;
   gap: 1rem;
   font-family: 'Courier New', monospace;
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
 }
 
 .board-container.transitioning {
