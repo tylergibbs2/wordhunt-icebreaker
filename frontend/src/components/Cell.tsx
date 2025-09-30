@@ -21,11 +21,6 @@ export const Cell = ({
   isShaking = false,
   onPointerDown,
 }: CellProps) => {
-  // Debug logging
-  if (isShaking) {
-    console.log(`Cell ${row}-${col} is shaking`);
-  }
-
   const getStressClass = () => {
     switch (stressLevel) {
       case 2:
