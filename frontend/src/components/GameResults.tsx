@@ -52,13 +52,13 @@ export const GameResults: React.FC<GameResultsProps> = ({
   };
 
   const handleShareResults = async () => {
-    const shareText = `🧊 Word Hunt: Icebreaker Results\n❄️ Max Score: ${maxScore}\n🌨️ Total Score: ${totalScore}\n🔍 Words Found: ${words.length}`;
+    const shareText = `🧊 Just played Word Hunt: Icebreaker!\n\n🏆 Best word: ${maxScore} points\n❄️ Total: ${totalScore} points\n🔍 Found ${words.length} words\n\nCan you beat my score?\n\nhttps://wordhunt.tyler.solutions`;
 
     // Check if native share API is available (mobile)
     if (navigator.share) {
       try {
         await navigator.share({
-          title: '🧊 Word Hunt: Icebreaker Results',
+          title: '🧊 Word Hunt: Icebreaker',
           text: shareText,
         });
       } catch {
