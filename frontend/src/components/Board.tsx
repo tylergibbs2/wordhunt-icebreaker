@@ -557,7 +557,7 @@ export const Board = () => {
 
   // Show game results if game ended
   if (gameEnded) {
-    return <GameResults words={wordHistory} />;
+    return <GameResults words={wordHistory} day={day} />;
   }
 
   return (

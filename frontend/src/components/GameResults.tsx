@@ -12,12 +12,14 @@ interface GameResultsProps {
   words: WordResult[];
   title?: string;
   showOverlay?: boolean;
+  day?: string;
 }
 
 export const GameResults: React.FC<GameResultsProps> = ({
   words,
   title = 'Game Complete!',
   showOverlay = true,
+  day,
 }) => {
   const maxScore = Math.max(...words.map(w => w.score), 0);
   const totalScore = words.reduce((sum, w) => sum + w.score, 0);
@@ -52,7 +54,8 @@ export const GameResults: React.FC<GameResultsProps> = ({
   };
 
   const handleShareResults = async () => {
-    const shareText = `🧊 Just played Word Hunt: Icebreaker!\n\n🏆 Best word: ${maxScore} points\n❄️ Total: ${totalScore} points\n🔍 Found ${words.length} words\n\nCan you beat my score?\n\nhttps://wordhunt.tyler.solutions`;
+    const dayText = day ? `Day ${day}` : 'Word Hunt';
+    const shareText = `🧊 Just played Word Hunt: Icebreaker!\n\n📅 ${dayText}\n🏆 Best word: ${maxScore} points\n❄️ Total: ${totalScore} points\n🔍 Found ${words.length} words\n\nCan you beat my score?\n\nhttps://wordhunt.tyler.solutions`;
 
     // Check if native share API is available (mobile)
     if (navigator.share) {
@@ -85,6 +88,11 @@ export const GameResults: React.FC<GameResultsProps> = ({
       <div className="game-results">
         <div className="results-header">
           <h1 className="results-title">{title}</h1>
+          {day && (
+            <div className="day-display">
+              📅 Day {day}
+            </div>
+          )}
           <div className="score-summary">
             <div className="max-score">Max Score: {maxScore}</div>
             <div className="total-score">Total Score: {totalScore}</div>

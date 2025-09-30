@@ -37,7 +37,7 @@ function AppContent() {
         timestamp: word.timestamp,
       }));
 
-      return <GameResults words={wordResults} title="Today's Results" />;
+      return <GameResults words={wordResults} title="Results" day={day} />;
     }
 
     // Otherwise show the startup popup

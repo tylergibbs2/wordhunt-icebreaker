@@ -49,6 +49,14 @@
   font-weight: 700;
 }
 
+.day-display {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: #66ccff;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  font-family: 'Courier New', monospace;
+}
+
 .score-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
