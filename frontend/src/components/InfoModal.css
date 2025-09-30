@@ -1,0 +1,149 @@
+/* Info Modal Styles */
+.info-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+}
+
+.info-modal {
+  background: #2a2a2a;
+  border: 2px solid #555555;
+  border-radius: 0px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #404040;
+}
+
+.info-header h2 {
+  color: #e0e0e0;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.close-button {
+  background: #000000;
+  border: 1px solid #555555;
+  border-radius: 0px;
+  color: #e0e0e0;
+  font-size: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Courier New', monospace;
+}
+
+.close-button:hover {
+  background: #2a2a2a;
+  border-color: #777777;
+}
+
+.close-button:active {
+  background: #1a1a1a;
+}
+
+.info-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info-section h3 {
+  color: #e0e0e0;
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.info-section p {
+  color: #b0b0b0;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.info-section ul {
+  color: #b0b0b0;
+  margin: 0;
+  padding-left: 1.5rem;
+  line-height: 1.5;
+}
+
+.info-section li {
+  margin-bottom: 0.5rem;
+}
+
+.info-section strong {
+  color: #e0e0e0;
+}
+
+/* Friday Special Styling */
+.info-section.friday-special {
+  background: #1a2a1a;
+  border: 1px solid #4a6b4a;
+  padding: 1rem;
+  border-radius: 0px;
+}
+
+.info-section.friday-special h3 {
+  color: #66ff66;
+}
+
+.info-section.friday-special p {
+  color: #88ff88;
+  font-weight: 600;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .info-modal {
+    margin: 1rem;
+    max-height: 85vh;
+  }
+
+  .info-header {
+    padding: 1rem;
+  }
+
+  .info-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .info-content {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .info-section h3 {
+    font-size: 1rem;
+  }
+
+  .info-section ul {
+    padding-left: 1rem;
+  }
+
+  .info-section.friday-special {
+    padding: 0.75rem;
+  }
+}
