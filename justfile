@@ -23,3 +23,6 @@ fmt-frontend:
 
 test:
     uv run pytest
+
+deploy:
+    fly deploy
