@@ -21,6 +21,13 @@ fmt-backend:
 fmt-frontend:
     bun run format
 
+dev-backend:
+    uv run fastapi dev app/main.py --host 0.0.0.0
+
+[working-directory: 'frontend']
+dev-frontend:
+    bun run dev
+
 test:
     uv run pytest
 
