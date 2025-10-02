@@ -16,7 +16,8 @@ export const useBoard = () => {
   });
 
   return {
-    board: query.data?.board,
+    boards: query.data?.boards,
+    board: query.data?.boards?.[0], // First board is the initial board
     seed: query.data?.seed,
     day: query.data?.day,
     timerDuration: query.data?.timer_duration,

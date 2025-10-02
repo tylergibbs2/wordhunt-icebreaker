@@ -19,7 +19,7 @@ import {
 import './Board.css';
 
 export const Board = () => {
-  const { board, isLoading, error, refetch, seed, day, timerDuration } =
+  const { boards, board, isLoading, error, refetch, day, timerDuration } =
     useBoard();
   const { isWord } = useDictionaryContext();
 
@@ -326,13 +326,14 @@ export const Board = () => {
                   new Map(prev).set(cellKey, newCount)
                 );
 
-                // Generate new letter with updated replacement count and original letter
-                const originalLetter = prevBoard[tile.row][tile.col];
-                newBoard[tile.row][tile.col] = generateRandomLetter(
-                  { row: tile.row, col: tile.col },
-                  newCount,
-                  originalLetter
-                );
+                // Get letter from subsequent board based on replacement count
+                if (boards && boards.length > newCount) {
+                  newBoard[tile.row][tile.col] =
+                    boards[newCount].grid[tile.row][tile.col];
+                } else {
+                  // Fallback to original letter if we run out of boards
+                  newBoard[tile.row][tile.col] = prevBoard[tile.row][tile.col];
+                }
 
                 // Trigger fade-in animation for the new character
                 setFadingInCells(prev => new Set([...prev, cellKey]));
@@ -430,88 +431,6 @@ export const Board = () => {
 
     return () => clearInterval(timer);
   }, [isTimerActive, timeRemaining]);
-
-  // Seeded random number generator (Linear Congruential Generator)
-  const seededRandom = (seed: number) => {
-    let currentSeed = seed;
-    return () => {
-      currentSeed = (currentSeed * 1664525 + 1013904223) % 4294967296;
-      return currentSeed / 4294967296;
-    };
-  };
-
-  // Generate a deterministic random letter (A-Z) using seed and replacement count
-  // Replace with same type (vowel/consonant) as original letter
-  const generateRandomLetter = (
-    position: { row: number; col: number },
-    replacementCount: number = 0,
-    originalLetter: string
-  ) => {
-    if (!seed) return String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Fallback
-
-    // Create a unique seed for this position by combining board seed with position and replacement count
-    const positionSeed =
-      seed + position.row * 1000 + position.col + replacementCount * 10000;
-    const random = seededRandom(positionSeed);
-
-    // Define vowels and consonants with frequency weights
-    const vowels = ['A', 'E', 'I', 'O', 'U'];
-
-    // Consonants with their relative frequency weights (based on English letter frequency)
-    const consonantWeights = [
-      { letter: 'R', weight: 9.58 },
-      { letter: 'S', weight: 6.33 },
-      { letter: 'T', weight: 9.06 },
-      { letter: 'N', weight: 6.75 },
-      { letter: 'L', weight: 4.03 },
-      { letter: 'C', weight: 2.78 },
-      { letter: 'D', weight: 4.25 },
-      { letter: 'M', weight: 2.41 },
-      { letter: 'P', weight: 2.29 },
-      { letter: 'H', weight: 6.09 },
-      { letter: 'G', weight: 2.02 },
-      { letter: 'B', weight: 1.29 },
-      { letter: 'F', weight: 2.23 },
-      { letter: 'Y', weight: 1.97 },
-      { letter: 'W', weight: 2.36 },
-      { letter: 'K', weight: 0.77 },
-      { letter: 'V', weight: 0.98 },
-      { letter: 'X', weight: 0.15 },
-      { letter: 'J', weight: 0.15 },
-      { letter: 'Q', weight: 0.1 },
-      { letter: 'Z', weight: 0.07 },
-    ];
-
-    // Check if original letter was a vowel
-    const wasVowel = vowels.includes(originalLetter.toUpperCase());
-    if (wasVowel) {
-      // Replace with a different vowel
-      const otherVowels = vowels.filter(
-        v => v !== originalLetter.toUpperCase()
-      );
-      return otherVowels[Math.floor(random() * otherVowels.length)];
-    } else {
-      // Replace with a different consonant using frequency weighting
-      const otherConsonants = consonantWeights.filter(
-        c => c.letter !== originalLetter.toUpperCase()
-      );
-
-      // Calculate total weight
-      const totalWeight = otherConsonants.reduce((sum, c) => sum + c.weight, 0);
-
-      // Generate weighted random selection
-      let randomValue = random() * totalWeight;
-      for (const consonant of otherConsonants) {
-        randomValue -= consonant.weight;
-        if (randomValue <= 0) {
-          return consonant.letter;
-        }
-      }
-
-      // Fallback to last consonant (should never reach here)
-      return otherConsonants[otherConsonants.length - 1].letter;
-    }
-  };
 
   // Update board dimensions when component mounts or board changes
   useEffect(() => {

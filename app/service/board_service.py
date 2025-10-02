@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from pathlib import Path
 import random
 from typing import ClassVar
@@ -30,8 +31,9 @@ class BoardService:
 
     wordlist_path: Path
 
-    _last_seed: ClassVar[int | None] = None
-    _cached_board: ClassVar[BoardGenerationResponse | None] = None
+    # Unified cache: dict[seed, BoardGenerationResponse | list[BoardGenerationResponse]]
+    _cache: ClassVar[OrderedDict[int, BoardGenerationResponse | list[BoardGenerationResponse]]] = OrderedDict()
+    _max_cache_size: ClassVar[int] = 30
 
     letter_frequencies: dict[str, float]
     letters: list[str]
@@ -289,16 +291,50 @@ class BoardService:
         # If no board met min word count, return the last generated board
         return BoardGenerationResponse(grid=grid, richness=richness_score, words=words)
 
+    async def generate_multiple_boards(
+        self, request: BoardGenerationRequest, *, base_seed: int | None = None, num_boards: int = 10
+    ) -> list[BoardGenerationResponse]:
+        """Generate multiple boards with deterministic seeds based on base seed."""
+        if base_seed is None:
+            # Generate boards without caching if no seed provided
+            boards = []
+            for _ in range(num_boards):
+                board = await self.generate_board(request, seed=None)
+                boards.append(board)
+            return boards
+
+        # Check cache for multiple boards
+        cached_item = self._get_from_cache(base_seed)
+        if cached_item is not None and isinstance(cached_item, list):
+            return cached_item
+
+        boards = []
+        for i in range(num_boards):
+            # Create a unique seed for each board by combining base seed with board index
+            board_seed = base_seed + i
+            board = await self.generate_board(request, seed=board_seed)
+            boards.append(board)
+
+        # Cache the boards
+        self._put_in_cache(base_seed, boards)
+        return boards
+
     async def generate_board(
         self, request: BoardGenerationRequest, *, seed: int | None = None
     ) -> BoardGenerationResponse:
         """Generate a board with specified parameters."""
-        if seed and seed == BoardService._last_seed and BoardService._cached_board is not None:
-            return BoardService._cached_board
+        if seed is None:
+            # Generate board without caching if no seed provided
+            return await self._do_generate_board(request, random.Random())
 
-        BoardService._cached_board = await self._do_generate_board(request, random.Random(seed))
-        BoardService._last_seed = seed
-        return BoardService._cached_board
+        # Check cache for single board
+        cached_item = self._get_from_cache(seed)
+        if cached_item is not None and isinstance(cached_item, BoardGenerationResponse):
+            return cached_item
+
+        board = await self._do_generate_board(request, random.Random(seed))
+        self._put_in_cache(seed, board)
+        return board
 
     def validate_move(self, request: MoveValidationRequest) -> MoveValidationResponse:
         """Validate a move on a board and calculate its score."""
@@ -372,3 +408,24 @@ class BoardService:
         letter_bonus = sum(letter_values.get(letter, 1) for letter in word)
 
         return length_score + letter_bonus
+
+    @classmethod
+    def _manage_cache_size(cls) -> None:
+        """Remove oldest entries if cache exceeds max size."""
+        while len(cls._cache) > cls._max_cache_size:
+            cls._cache.popitem(last=False)
+
+    @classmethod
+    def _get_from_cache(cls, seed: int) -> BoardGenerationResponse | list[BoardGenerationResponse] | None:
+        """Get cached item and move to end (most recently used)."""
+        if seed in cls._cache:
+            item = cls._cache.pop(seed)
+            cls._cache[seed] = item
+            return item
+        return None
+
+    @classmethod
+    def _put_in_cache(cls, seed: int, item: BoardGenerationResponse | list[BoardGenerationResponse]) -> None:
+        """Put item in cache and manage cache size."""
+        cls._cache[seed] = item
+        cls._manage_cache_size()

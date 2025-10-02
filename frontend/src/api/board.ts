@@ -1,9 +1,9 @@
 import { API_BASE_URL } from '../config';
 
 export interface BoardResponse {
-  board: {
+  boards: {
     grid: string[][];
-  };
+  }[];
   seed: number;
   day: string;
   timer_duration: number;
