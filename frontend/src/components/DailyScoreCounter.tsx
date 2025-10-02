@@ -9,14 +9,16 @@ export const DailyScoreCounter: React.FC<DailyScoreCounterProps> = ({
   totalScore,
 }) => {
   const [displayScore, setDisplayScore] = useState(totalScore);
-  const [animatingDigits, setAnimatingDigits] = useState<Set<number>>(new Set());
+  const [animatingDigits, setAnimatingDigits] = useState<Set<number>>(
+    new Set()
+  );
 
   useEffect(() => {
     if (totalScore !== displayScore) {
       // Always use 6 digits for consistent comparison
       const paddedScore = totalScore.toString().padStart(6, '0');
       const paddedDisplay = displayScore.toString().padStart(6, '0');
-      
+
       // Find which digits need to change
       const changingDigits: number[] = [];
       paddedScore.split('').forEach((char, index) => {
@@ -25,19 +27,19 @@ export const DailyScoreCounter: React.FC<DailyScoreCounterProps> = ({
           changingDigits.push(index);
         }
       });
-      
+
       // If no digits are changing, just update the display score
       if (changingDigits.length === 0) {
         setDisplayScore(totalScore);
         return;
       }
-      
+
       // Animate each changing digit with Vestaboard-style staggered timing
       changingDigits.forEach((digitIndex, animationIndex) => {
         setTimeout(() => {
           // Add this digit to animating set
           setAnimatingDigits(prev => new Set([...prev, digitIndex]));
-          
+
           // Update the digit value at the midpoint of the animation (when it's "edge-on")
           setTimeout(() => {
             setDisplayScore(prev => {

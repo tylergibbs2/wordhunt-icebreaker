@@ -557,7 +557,10 @@ export const Board = () => {
   const gridSize = currentBoard.length;
 
   // Calculate daily total score
-  const dailyTotalScore = wordHistory.reduce((total, wordResult) => total + wordResult.score, 0);
+  const dailyTotalScore = wordHistory.reduce(
+    (total, wordResult) => total + wordResult.score,
+    0
+  );
 
   // Show game results if game ended
   if (gameEnded) {
@@ -574,10 +577,10 @@ export const Board = () => {
         onTimeUp={handleTimeUp}
         isActive={gameStarted && !gameEnded}
       />
-      
+
       {/* Daily Score Counter */}
       <DailyScoreCounter totalScore={dailyTotalScore} />
-      
+
       <div className="board-wrapper">
         <div
           className="board-grid"
