@@ -8,6 +8,7 @@ import { PixelExplosion } from './PixelExplosion';
 import { Timer } from './Timer';
 import { GameResults, type WordResult } from './GameResults';
 import { ErrorPopup } from './ErrorPopup';
+import { DailyScoreCounter } from './DailyScoreCounter';
 import { useDictionaryContext } from './DictionaryProvider';
 import { calculateScore, getScoreBreakdown } from '../utils/scoring';
 import {
@@ -555,6 +556,9 @@ export const Board = () => {
 
   const gridSize = currentBoard.length;
 
+  // Calculate daily total score
+  const dailyTotalScore = wordHistory.reduce((total, wordResult) => total + wordResult.score, 0);
+
   // Show game results if game ended
   if (gameEnded) {
     return <GameResults words={wordHistory} day={day} />;
@@ -570,6 +574,10 @@ export const Board = () => {
         onTimeUp={handleTimeUp}
         isActive={gameStarted && !gameEnded}
       />
+      
+      {/* Daily Score Counter */}
+      <DailyScoreCounter totalScore={dailyTotalScore} />
+      
       <div className="board-wrapper">
         <div
           className="board-grid"
