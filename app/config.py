@@ -18,23 +18,15 @@ class Config(BaseSettings):
     # Game timer configuration (in seconds)
     game_timer_duration: int = 90
 
-    # Friday special settings
-    friday_board_size: int = 4
-    friday_timer_duration: int = 90  # 90 seconds
-
     def should_serve_frontend(self) -> bool:
         return self.environment == "production"
 
     def get_board_size_for_date(self, game_date: date) -> int:
-        """Get board size for a specific date (5x5 on Fridays, 4x4 otherwise)"""
-        if game_date.weekday() == 4:  # Friday is weekday 4
-            return self.friday_board_size
+        """Get board size for a specific date"""
         return self.board_size
 
     def get_timer_duration_for_date(self, game_date: date) -> int:
-        """Get timer duration for a specific date (2 minutes on Fridays, 90 seconds otherwise)"""
-        if game_date.weekday() == 4:  # Friday is weekday 4
-            return self.friday_timer_duration
+        """Get timer duration for a specific date"""
         return self.game_timer_duration
 
 
