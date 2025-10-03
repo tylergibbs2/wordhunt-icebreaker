@@ -159,7 +159,7 @@ export const getAllDailyResults = (): Record<string, DailyResult> => {
 
       for (const [day, result] of Object.entries(parsed)) {
         if (result && typeof result === 'object' && 'day' in result) {
-          const dailyResult = result as any; // Type assertion for old format compatibility
+          const dailyResult = result as any; // eslint-disable-line @typescript-eslint/no-explicit-any
           validResults[day] = {
             day: dailyResult.day,
             words: Array.isArray(dailyResult.words) ? dailyResult.words : [],

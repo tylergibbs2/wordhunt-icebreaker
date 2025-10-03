@@ -21,6 +21,7 @@ check-backend:
 [working-directory: 'frontend']
 check-frontend:
     bun run format:check
+    bun run lint
 
 fmt-backend:
     uv run ruff format

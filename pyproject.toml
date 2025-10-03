@@ -1,7 +1,7 @@
 [project]
 name = "wordhunt-icebreaker"
 version = "0.1.0"
-description = "Add your description here"
+description = "Daily puzzle game based on GamePigeon's WordHunt"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -12,7 +12,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pyright>=1.1.405",
+    "pyright>=1.1.406",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.1.0",
     "ruff>=0.12.12",
