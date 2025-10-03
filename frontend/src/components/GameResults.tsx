@@ -1,5 +1,6 @@
 import React from 'react';
 import './GameResults.css';
+import { getHistoricalStats, getDailyResults } from '../utils/dailyTracking';
 
 export interface WordResult {
   word: string;
@@ -23,6 +24,12 @@ export const GameResults: React.FC<GameResultsProps> = ({
 }) => {
   const maxScore = Math.max(...words.map(w => w.score), 0);
   const totalScore = words.reduce((sum, w) => sum + w.score, 0);
+
+  // Get historical stats for comparison
+  const historicalStats = getHistoricalStats();
+  const previousDayResult = day
+    ? getDailyResults((parseInt(day) - 1).toString())
+    : null;
 
   // Sort words by score (highest to lowest)
   const sortedWords = [...words].sort((a, b) => b.score - a.score);
@@ -94,6 +101,113 @@ export const GameResults: React.FC<GameResultsProps> = ({
             <div className="total-score">Total Score: {totalScore}</div>
             <div className="word-count">Words Found: {words.length}</div>
           </div>
+
+          {/* Historical Comparisons */}
+          {(historicalStats.totalDaysPlayed > 0 || previousDayResult) && (
+            <div className="historical-comparison">
+              <h3 className="comparison-title">📊 Your Progress</h3>
+
+              {/* Previous Day Comparison */}
+              {previousDayResult && (
+                <div className="comparison-section">
+                  <h4 className="comparison-subtitle">
+                    vs Yesterday (Day {parseInt(day || '0') - 1})
+                  </h4>
+                  <div className="comparison-stats">
+                    <div
+                      className={`comparison-item ${totalScore > previousDayResult.totalScore ? 'better' : totalScore < previousDayResult.totalScore ? 'worse' : 'same'}`}
+                    >
+                      <span className="comparison-label">Total Score:</span>
+                      <span className="comparison-value">
+                        {totalScore}{' '}
+                        {totalScore > previousDayResult.totalScore
+                          ? '↗️'
+                          : totalScore < previousDayResult.totalScore
+                            ? '↘️'
+                            : '➡️'}{' '}
+                        {previousDayResult.totalScore}
+                      </span>
+                    </div>
+                    <div
+                      className={`comparison-item ${maxScore > previousDayResult.maxScore ? 'better' : maxScore < previousDayResult.maxScore ? 'worse' : 'same'}`}
+                    >
+                      <span className="comparison-label">Best Word:</span>
+                      <span className="comparison-value">
+                        {maxScore}{' '}
+                        {maxScore > previousDayResult.maxScore
+                          ? '↗️'
+                          : maxScore < previousDayResult.maxScore
+                            ? '↘️'
+                            : '➡️'}{' '}
+                        {previousDayResult.maxScore}
+                      </span>
+                    </div>
+                    <div
+                      className={`comparison-item ${words.length > previousDayResult.wordCount ? 'better' : words.length < previousDayResult.wordCount ? 'worse' : 'same'}`}
+                    >
+                      <span className="comparison-label">Words Found:</span>
+                      <span className="comparison-value">
+                        {words.length}{' '}
+                        {words.length > previousDayResult.wordCount
+                          ? '↗️'
+                          : words.length < previousDayResult.wordCount
+                            ? '↘️'
+                            : '➡️'}{' '}
+                        {previousDayResult.wordCount}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* All-Time Stats */}
+              {historicalStats.totalDaysPlayed > 0 && (
+                <div className="comparison-section">
+                  <h4 className="comparison-subtitle">🏆 All-Time Records</h4>
+                  <div className="comparison-stats">
+                    <div className="comparison-item record">
+                      <span className="comparison-label">
+                        Best Total Score:
+                      </span>
+                      <span className="comparison-value">
+                        {historicalStats.bestTotalScore}{' '}
+                        {historicalStats.bestDay &&
+                          `(Day ${historicalStats.bestDay})`}
+                      </span>
+                    </div>
+                    <div className="comparison-item record">
+                      <span className="comparison-label">
+                        Best Single Word:
+                      </span>
+                      <span className="comparison-value">
+                        {historicalStats.bestMaxScore}
+                      </span>
+                    </div>
+                    <div className="comparison-item record">
+                      <span className="comparison-label">Average Score:</span>
+                      <span className="comparison-value">
+                        {historicalStats.averageScore}
+                      </span>
+                    </div>
+                    <div className="comparison-item record">
+                      <span className="comparison-label">
+                        Total Words Found:
+                      </span>
+                      <span className="comparison-value">
+                        {historicalStats.totalWordsFound}
+                      </span>
+                    </div>
+                    <div className="comparison-item record">
+                      <span className="comparison-label">Days Played:</span>
+                      <span className="comparison-value">
+                        {historicalStats.totalDaysPlayed}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <button className="share-results-button" onClick={handleShareResults}>
             Share Results

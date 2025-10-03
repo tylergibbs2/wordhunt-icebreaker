@@ -89,6 +89,100 @@
   color: #ffcc66;
 }
 
+/* Historical Comparison Styles */
+.historical-comparison {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 0;
+}
+
+.comparison-title {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: #66ccff;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+.comparison-section {
+  margin-bottom: 1.5rem;
+}
+
+.comparison-section:last-child {
+  margin-bottom: 0;
+}
+
+.comparison-subtitle {
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  color: #e0e0e0;
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
+}
+
+.comparison-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.comparison-item {
+  background: #000000;
+  border: 1px solid #404040;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+}
+
+.comparison-item.better {
+  border-color: #66ff66;
+  background: rgba(102, 255, 102, 0.05);
+}
+
+.comparison-item.worse {
+  border-color: #ff6666;
+  background: rgba(255, 102, 102, 0.05);
+}
+
+.comparison-item.same {
+  border-color: #ffcc66;
+  background: rgba(255, 204, 102, 0.05);
+}
+
+.comparison-item.record {
+  border-color: #66ccff;
+  background: rgba(102, 204, 255, 0.05);
+}
+
+.comparison-label {
+  color: #b0b0b0;
+  font-weight: 500;
+}
+
+.comparison-value {
+  color: #e0e0e0;
+  font-weight: 600;
+}
+
+.comparison-item.better .comparison-value {
+  color: #66ff66;
+}
+
+.comparison-item.worse .comparison-value {
+  color: #ff6666;
+}
+
+.comparison-item.same .comparison-value {
+  color: #ffcc66;
+}
+
+.comparison-item.record .comparison-value {
+  color: #66ccff;
+}
+
 .share-results-button {
   font-family: 'Courier New', monospace;
   font-size: clamp(0.9rem, 2.2vw, 1.1rem);
@@ -252,6 +346,17 @@
 
   .word-stress {
     gap: 0.2rem;
+  }
+
+  .comparison-stats {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .comparison-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 }
 
