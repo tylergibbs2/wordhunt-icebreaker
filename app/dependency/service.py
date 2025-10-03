@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from app.config import config
 from app.service import BoardService
 from app.utils import calculate_daily_seed
 
@@ -27,7 +28,7 @@ def get_game_date() -> date:
     else:  # 8pm or later
         game_date = now.date() + timedelta(days=1)
 
-    return game_date
+    return game_date + config.game_day_offset
 
 
 GameDateDep = Annotated[date, Depends(get_game_date)]

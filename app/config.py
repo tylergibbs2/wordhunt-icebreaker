@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Literal
 
@@ -13,6 +13,7 @@ class Config(BaseSettings):
 
     board_size: int = 4
     board_target_richness: float = 0.9
+    game_day_offset: timedelta = timedelta(days=0)
 
     # Game timer configuration (in seconds)
     game_timer_duration: int = 90
