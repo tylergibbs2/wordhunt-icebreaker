@@ -34,6 +34,9 @@ export const Board = () => {
   const [characterMorphingCells, setCharacterMorphingCells] = useState<
     Set<string>
   >(new Set());
+  const [wordBreathingCells, setWordBreathingCells] = useState<Set<string>>(
+    new Set()
+  );
   const [replacementCounts, setReplacementCounts] = useState<
     Map<string, number>
   >(new Map());
@@ -87,6 +90,30 @@ export const Board = () => {
   // Function to remove a pixel explosion when it completes
   const removePixelExplosion = (id: string) => {
     setPixelExplosions(prev => prev.filter(explosion => explosion.id !== id));
+  };
+
+  // Function to trigger sequential breathing animation for successful word
+  const triggerWordBreathingAnimation = (tiles: typeof selectedTiles) => {
+    if (tiles.length === 0) return;
+
+    // Animate each tile in sequence from start to end
+    tiles.forEach((tile, index) => {
+      const cellKey = `${tile.row}-${tile.col}`;
+
+      setTimeout(() => {
+        // Add breathing animation
+        setWordBreathingCells(prev => new Set([...prev, cellKey]));
+
+        // Remove breathing animation after it completes
+        setTimeout(() => {
+          setWordBreathingCells(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(cellKey);
+            return newSet;
+          });
+        }, 500); // Match CSS animation duration
+      }, index * 75); // 75ms delay between each tile (more breathing room)
+    });
   };
 
   // Timer handlers
@@ -223,6 +250,11 @@ export const Board = () => {
       ) {
         // Add word to used words set
         setUsedWords(prev => new Set([...prev, word.toLowerCase()]));
+
+        // Trigger breathing animation for successful word (with small delay)
+        setTimeout(() => {
+          triggerWordBreathingAnimation(selectedTiles);
+        }, 100); // Small delay to let other immediate effects show first
 
         // Calculate score using the new scoring algorithm
         const score = calculateScore(
@@ -529,6 +561,7 @@ export const Board = () => {
               const cellKey = `${rowIndex}-${colIndex}`;
               const isCrumbling = crumblingCells.has(cellKey);
               const isCharacterMorphing = characterMorphingCells.has(cellKey);
+              const isWordBreathing = wordBreathingCells.has(cellKey);
               const isShaking = shakingTiles.has(cellKey);
 
               return (
@@ -541,6 +574,7 @@ export const Board = () => {
                   stressLevel={stressLevel}
                   isCrumbling={isCrumbling}
                   isCharacterMorphing={isCharacterMorphing}
+                  isWordBreathing={isWordBreathing}
                   isShaking={isShaking}
                   onPointerDown={handlePointerDown}
                 />

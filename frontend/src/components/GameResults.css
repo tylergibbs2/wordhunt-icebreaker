@@ -4,11 +4,12 @@
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Use dynamic viewport height for mobile */
   background: #1a1a1a;
   display: flex;
   flex-direction: column;
   z-index: 3000;
-  overflow: hidden;
+  overflow: hidden; /* Prevent body scroll */
   animation: subtleFadeIn 0.5s ease-out;
 }
 
@@ -29,7 +30,7 @@
   border-radius: 0px;
   padding: 1rem;
   width: 100%;
-  height: 100%;
+  height: 100%; /* Use full height */
   overflow-y: auto;
   font-family: 'Courier New', monospace;
   display: flex;
@@ -217,6 +218,7 @@
   flex: 1;
   overflow-y: auto;
   margin-bottom: 1rem;
+  min-height: 200px; /* Ensure minimum height for content */
 }
 
 .words-title {
@@ -288,7 +290,7 @@
   text-align: center;
   padding: clamp(0.75rem, 2vw, 1.5rem);
   border-top: 1px solid #404040;
-  margin-top: auto;
+  margin-top: 1rem; /* Use fixed margin instead of auto */
   flex-shrink: 0;
 }
 
@@ -326,6 +328,13 @@
 @media (max-width: 768px) {
   .game-results {
     padding: 0.75rem;
+    min-height: 0; /* Allow flex shrinking */
+  }
+
+  .words-list {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 150px; /* Ensure minimum height on mobile */
   }
 
   .words-container {
@@ -363,14 +372,23 @@
 @media (max-width: 480px) {
   .game-results {
     padding: 0.5rem;
+    min-height: 0; /* Allow flex shrinking */
   }
 
   .results-header {
     margin-bottom: 1rem;
+    flex-shrink: 0; /* Prevent header from shrinking */
   }
 
   .words-list {
     margin-bottom: 0.5rem;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 120px; /* Ensure minimum height on small mobile */
+  }
+
+  .words-container {
+    gap: 0.5rem;
   }
 }
 

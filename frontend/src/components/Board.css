@@ -250,6 +250,24 @@
   animation: shake 0.5s ease-in-out;
 }
 
+/* Breathing animation for successful word submission */
+.board-cell.word-breathing {
+  animation: wordBreathing 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10; /* Ensure it's visible above other effects */
+}
+
+@keyframes wordBreathing {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.1);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .board-container {
