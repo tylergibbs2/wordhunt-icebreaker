@@ -100,9 +100,12 @@ export const Board = () => {
   const {
     selectedTiles,
     isTileSelected,
+    controlMode,
     handlePointerDown,
     handleGlobalPointerMove,
     handlePointerUp,
+    handleKeyDown,
+    submitWord,
   } = useTileSelection(
     currentBoard.length > 0 ? { grid: currentBoard } : board,
     word => {
@@ -454,6 +457,12 @@ export const Board = () => {
     };
   }, [board]);
 
+  // Keyboard support for click mode
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
   if (isLoading) {
     return <div className="board-loading">Loading board...</div>;
   }
@@ -545,6 +554,19 @@ export const Board = () => {
           gridSize={currentBoard?.length || 0}
           pathColor={getPathColor(selectedTiles)}
         />
+      </div>
+
+      {/* Submit button for click mode */}
+      <div
+        className={`submit-button-container ${controlMode === 'click' ? 'visible' : 'hidden'}`}
+      >
+        <button
+          className={`submit-word-button ${selectedTiles.length > 0 ? 'enabled' : 'disabled'}`}
+          onClick={submitWord}
+          disabled={selectedTiles.length === 0}
+        >
+          Submit Word (enter)
+        </button>
       </div>
 
       {/* Score popups */}

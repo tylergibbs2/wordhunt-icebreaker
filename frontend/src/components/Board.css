@@ -235,3 +235,67 @@
     font-size: clamp(1.75rem, 7vw, 2.75rem);
   }
 }
+
+/* Submit Button */
+.submit-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.submit-button-container.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.submit-button-container.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.submit-word-button {
+  padding: 0.75rem 1.5rem;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.submit-word-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.submit-word-button:active:not(:disabled) {
+  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.submit-word-button.disabled {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+}
+
+.submit-word-button.disabled:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 640px) {
+  .submit-word-button {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+}
