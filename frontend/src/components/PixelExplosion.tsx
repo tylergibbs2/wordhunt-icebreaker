@@ -23,7 +23,7 @@ export const PixelExplosion: React.FC<PixelExplosionProps> = ({
     // Auto-cleanup after effect
     cleanupTimerRef.current = setTimeout(() => {
       onComplete();
-    }, 1000); // 1 second effect
+    }, 800); // Match the animation duration
 
     return () => {
       if (cleanupTimerRef.current) {

@@ -31,7 +31,9 @@ export const Board = () => {
     height: 0,
   });
   const [crumblingCells, setCrumblingCells] = useState<Set<string>>(new Set());
-  const [fadingInCells, setFadingInCells] = useState<Set<string>>(new Set());
+  const [characterMorphingCells, setCharacterMorphingCells] = useState<
+    Set<string>
+  >(new Set());
   const [replacementCounts, setReplacementCounts] = useState<
     Map<string, number>
   >(new Map());
@@ -318,7 +320,7 @@ export const Board = () => {
 
               setCrumblingCells(prev => new Set([...prev, cellKey]));
 
-              // Replace character after crumbling animation is halfway done
+              // Replace character after crumbling animation is nearly complete
               setTimeout(() => {
                 // Get current replacement count for this cell
                 const currentCount = replacementCounts.get(cellKey) || 0;
@@ -338,18 +340,18 @@ export const Board = () => {
                   newBoard[tile.row][tile.col] = prevBoard[tile.row][tile.col];
                 }
 
-                // Trigger fade-in animation for the new character
-                setFadingInCells(prev => new Set([...prev, cellKey]));
+                // Trigger character morphing animation for the new character
+                setCharacterMorphingCells(prev => new Set([...prev, cellKey]));
 
-                // Remove from fade-in set after animation completes
+                // Remove from character morphing set after animation completes
                 setTimeout(() => {
-                  setFadingInCells(prev => {
+                  setCharacterMorphingCells(prev => {
                     const newSet = new Set(prev);
                     newSet.delete(cellKey);
                     return newSet;
                   });
-                }, 300);
-              }, 300);
+                }, 600);
+              }, 500);
 
               // Remove from crumbling set after animation completes
               setTimeout(() => {
@@ -358,7 +360,7 @@ export const Board = () => {
                   newSet.delete(cellKey);
                   return newSet;
                 });
-              }, 300);
+              }, 800);
             }
           });
 
@@ -526,7 +528,7 @@ export const Board = () => {
               const stressLevel = stressLevels[rowIndex]?.[colIndex] ?? 2;
               const cellKey = `${rowIndex}-${colIndex}`;
               const isCrumbling = crumblingCells.has(cellKey);
-              const isFadingIn = fadingInCells.has(cellKey);
+              const isCharacterMorphing = characterMorphingCells.has(cellKey);
               const isShaking = shakingTiles.has(cellKey);
 
               return (
@@ -538,7 +540,7 @@ export const Board = () => {
                   isSelected={isSelected}
                   stressLevel={stressLevel}
                   isCrumbling={isCrumbling}
-                  isFadingIn={isFadingIn}
+                  isCharacterMorphing={isCharacterMorphing}
                   isShaking={isShaking}
                   onPointerDown={handlePointerDown}
                 />

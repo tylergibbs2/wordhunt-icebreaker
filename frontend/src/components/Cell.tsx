@@ -7,6 +7,7 @@ interface CellProps {
   isCrumbling?: boolean;
   isFadingIn?: boolean;
   isShaking?: boolean;
+  isCharacterMorphing?: boolean;
   onPointerDown: (e: React.PointerEvent, row: number, col: number) => void;
 }
 
@@ -19,6 +20,7 @@ export const Cell = ({
   isCrumbling = false,
   isFadingIn = false,
   isShaking = false,
+  isCharacterMorphing = false,
   onPointerDown,
 }: CellProps) => {
   const getStressClass = () => {
@@ -36,7 +38,7 @@ export const Cell = ({
 
   return (
     <div
-      className={`board-cell ${isSelected ? 'selected' : ''} ${getStressClass()} ${isCrumbling ? 'crumbling' : ''} ${isFadingIn ? 'fade-in' : ''} ${isShaking ? 'shaking' : ''}`}
+      className={`board-cell ${isSelected ? 'selected' : ''} ${getStressClass()} ${isCrumbling ? 'crumbling' : ''} ${isFadingIn ? 'fade-in' : ''} ${isCharacterMorphing ? 'character-morph' : ''} ${isShaking ? 'shaking' : ''}`}
       onPointerDown={e => onPointerDown(e, row, col)}
     >
       <div className="board-cell-text">{letter.toUpperCase()}</div>
