@@ -42,9 +42,6 @@
   justify-content: center;
   align-items: center;
   background-color: #000000;
-  font-size: clamp(2rem, 8vw, 3.5rem);
-  font-weight: 900;
-  color: #e0e0e0;
   cursor: pointer;
   user-select: none;
   border-radius: 0px;
@@ -57,6 +54,15 @@
   touch-action: none;
   font-family: 'Courier New', monospace;
   border: 1px solid #404040;
+}
+
+.board-cell-text {
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-weight: 900;
+  color: #e0e0e0;
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .board-cell:hover {
@@ -73,20 +79,29 @@
 /* Stress level styles with pastel colors */
 .board-cell.stress-green {
   background-color: #a8e6a3;
-  color: #2d5a2d;
   border: 1px solid #7dd87d;
+}
+
+.board-cell.stress-green .board-cell-text {
+  color: #2d5a2d;
 }
 
 .board-cell.stress-yellow {
   background-color: #fff2a8;
-  color: #8b6f00;
   border: 1px solid #f0e68c;
+}
+
+.board-cell.stress-yellow .board-cell-text {
+  color: #8b6f00;
 }
 
 .board-cell.stress-red {
   background-color: #ffb3b3;
-  color: #8b0000;
   border: 1px solid #ff9999;
+}
+
+.board-cell.stress-red .board-cell-text {
+  color: #8b0000;
 }
 
 .board-loading {

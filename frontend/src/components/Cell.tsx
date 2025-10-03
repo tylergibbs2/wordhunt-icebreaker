@@ -39,7 +39,7 @@ export const Cell = ({
       className={`board-cell ${isSelected ? 'selected' : ''} ${getStressClass()} ${isCrumbling ? 'crumbling' : ''} ${isFadingIn ? 'fade-in' : ''} ${isShaking ? 'shaking' : ''}`}
       onPointerDown={e => onPointerDown(e, row, col)}
     >
-      {letter.toUpperCase()}
+      <div className="board-cell-text">{letter.toUpperCase()}</div>
     </div>
   );
 };
