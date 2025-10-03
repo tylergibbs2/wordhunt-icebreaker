@@ -19,8 +19,8 @@ class Config(BaseSettings):
     game_timer_duration: int = 90
 
     # Friday special settings
-    friday_board_size: int = 5
-    friday_timer_duration: int = 120  # 2 minutes
+    friday_board_size: int = 4
+    friday_timer_duration: int = 90  # 90 seconds
 
     def should_serve_frontend(self) -> bool:
         return self.environment == "production"
