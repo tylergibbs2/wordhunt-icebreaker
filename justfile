@@ -4,6 +4,15 @@ fmt: fmt-backend fmt-frontend
 
 check: check-backend check-frontend
 
+install: install-backend install-frontend
+
+install-backend:
+    uv sync --locked --all-extras
+
+[working-directory: 'frontend']
+install-frontend:
+    bun install
+
 check-backend:
     uv run ruff check .
     uv run ruff format --check .
