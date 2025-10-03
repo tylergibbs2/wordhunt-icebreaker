@@ -320,7 +320,7 @@ export const Board = () => {
 
               setCrumblingCells(prev => new Set([...prev, cellKey]));
 
-              // Replace character after crumbling animation is nearly complete
+              // Replace character after crumbling animation is halfway done
               setTimeout(() => {
                 // Get current replacement count for this cell
                 const currentCount = replacementCounts.get(cellKey) || 0;
@@ -350,8 +350,8 @@ export const Board = () => {
                     newSet.delete(cellKey);
                     return newSet;
                   });
-                }, 600);
-              }, 500);
+                }, 300);
+              }, 200);
 
               // Remove from crumbling set after animation completes
               setTimeout(() => {
@@ -360,7 +360,7 @@ export const Board = () => {
                   newSet.delete(cellKey);
                   return newSet;
                 });
-              }, 800);
+              }, 400);
             }
           });
 

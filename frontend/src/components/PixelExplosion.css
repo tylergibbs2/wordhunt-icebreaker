@@ -1,6 +1,6 @@
 /* Enhanced Pixel Explosion Effect */
 .retro-glitch-effect {
-  animation: enhancedPixelExplosion 0.8s ease-out forwards;
+  animation: enhancedPixelExplosion 0.4s ease-out forwards;
   border-radius: 4px;
   box-shadow:
     0 0 10px currentColor,
