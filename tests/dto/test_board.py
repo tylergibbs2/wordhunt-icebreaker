@@ -6,6 +6,7 @@ from app.dto.board import (
     MoveValidationRequest,
     MoveValidationResponse,
     UnresolvedBoard,
+    WordBasedBoardGenerationRequest,
 )
 
 
@@ -92,3 +93,47 @@ def test_move_validation_response_validation():
     response = MoveValidationResponse(is_valid=False, word="")
     assert response.is_valid is False
     assert response.word == ""
+
+
+def test_word_based_board_generation_request_validation():
+    """Test WordBasedBoardGenerationRequest validation."""
+    # Test valid request
+    request = WordBasedBoardGenerationRequest(board_size=5, words=["CAT", "DOG", "BAT"], min_word_length=3)
+    assert request.board_size == 5
+    assert request.words == ["CAT", "DOG", "BAT"]
+    assert request.min_word_length == 3
+
+    # Test invalid board size
+    with pytest.raises(Exception, match=r"Input should be greater than or equal to 3"):
+        WordBasedBoardGenerationRequest(board_size=2, words=["CAT"])  # Too small
+
+    with pytest.raises(Exception, match=r"Input should be less than or equal to 10"):
+        WordBasedBoardGenerationRequest(board_size=11, words=["CAT"])  # Too large
+
+    # Test invalid min_word_length
+    with pytest.raises(Exception, match=r"Input should be greater than or equal to 3"):
+        WordBasedBoardGenerationRequest(board_size=5, words=["CAT"], min_word_length=2)  # Too small
+
+    with pytest.raises(Exception, match=r"Input should be less than or equal to 15"):
+        WordBasedBoardGenerationRequest(board_size=5, words=["CAT"], min_word_length=16)  # Too large
+
+    # Test empty words list
+    with pytest.raises(Exception, match=r"List should have at least 1 item"):
+        WordBasedBoardGenerationRequest(board_size=5, words=[])  # Empty list
+
+    # Test default min_word_length
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "DOG"])
+    assert request.min_word_length == 3  # Default value
+
+
+def test_word_based_board_generation_request_word_filtering():
+    """Test that WordBasedBoardGenerationRequest properly handles word filtering."""
+    # Test with mixed case words
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["cat", "DOG", "Bat", "rat"], min_word_length=3)
+    assert request.words == ["cat", "DOG", "Bat", "rat"]  # Should preserve original case
+
+    # Test with words of different lengths
+    request = WordBasedBoardGenerationRequest(
+        board_size=4, words=["CAT", "DOG", "BAT", "RAT", "COAT"], min_word_length=4
+    )
+    assert request.words == ["CAT", "DOG", "BAT", "RAT", "COAT"]  # All words >= 4 chars

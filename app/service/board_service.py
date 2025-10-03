@@ -11,6 +11,7 @@ from app.dto.board import (
     BoardGenerationResponse,
     MoveValidationRequest,
     MoveValidationResponse,
+    WordBasedBoardGenerationRequest,
 )
 
 
@@ -245,6 +246,117 @@ class BoardService:
         # Weight count more heavily than length
         return count_score * 0.8 + length_score * 0.2
 
+    def _generate_board_from_word_list(self, board_size: int, words: list[str], rng: random.Random) -> list[list[str]]:
+        """Generate a board by placing words from the input list."""
+        # Initialize empty board
+        grid = [["" for _ in range(board_size)] for _ in range(board_size)]
+
+        # Sort words by length (longest first) to place them more efficiently
+        sorted_words = sorted(words, key=len, reverse=True)
+
+        placed_words = []
+
+        for word in sorted_words:
+            if self._try_place_word(grid, word, rng):
+                placed_words.append(word)
+
+        # Fill remaining empty cells with random letters
+        for i in range(board_size):
+            for j in range(board_size):
+                if grid[i][j] == "":
+                    grid[i][j] = self._generate_random_letter(rng)
+
+        return grid
+
+    def _try_place_word(self, grid: list[list[str]], word: str, rng: random.Random, max_attempts: int = 100) -> bool:
+        """Try to place a word on the grid."""
+        board_size = len(grid)
+        word = word.upper()
+
+        for _ in range(max_attempts):
+            # Try different starting positions
+            start_row = rng.randrange(board_size)
+            start_col = rng.randrange(board_size)
+
+            # Try different directions
+            directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+            rng.shuffle(directions)
+
+            for dx, dy in directions:
+                if self._can_place_word_at_position(grid, word, start_row, start_col, dx, dy):
+                    self._place_word_at_position(grid, word, start_row, start_col, dx, dy)
+                    return True
+
+        return False
+
+    def _can_place_word_at_position(
+        self, grid: list[list[str]], word: str, row: int, col: int, dx: int, dy: int
+    ) -> bool:
+        """Check if a word can be placed at the given position and direction."""
+        board_size = len(grid)
+
+        # Check if the word fits within the board bounds
+        end_row = row + (len(word) - 1) * dx
+        end_col = col + (len(word) - 1) * dy
+
+        if end_row < 0 or end_row >= board_size or end_col < 0 or end_col >= board_size:
+            return False
+
+        # Check if all positions are either empty or match the word letters
+        for i, letter in enumerate(word):
+            check_row = row + i * dx
+            check_col = col + i * dy
+
+            if grid[check_row][check_col] != "" and grid[check_row][check_col] != letter:
+                return False
+
+        return True
+
+    def _place_word_at_position(self, grid: list[list[str]], word: str, row: int, col: int, dx: int, dy: int) -> None:
+        """Place a word at the given position and direction."""
+        for i, letter in enumerate(word):
+            place_row = row + i * dx
+            place_col = col + i * dy
+            grid[place_row][place_col] = letter
+
+    def _find_words_from_list(self, grid: list[list[str]], word_list: list[str], min_length: int = 3) -> set[str]:
+        """Find all words on the board from a specific word list."""
+        results: set[str] = set()
+        n = len(grid)
+        word_set = set(word_list)
+
+        for i in range(n):
+            for j in range(n):
+                self._dfs_find_words_from_list(grid, i, j, {(i, j)}, "", results, min_length, word_set)
+
+        return results
+
+    def _dfs_find_words_from_list(
+        self,
+        grid: list[list[str]],
+        x: int,
+        y: int,
+        visited: set[tuple[int, int]],
+        prefix: str,
+        results: set[str],
+        min_length: int,
+        word_set: set[str],
+    ) -> None:
+        """Depth-first search to find words on the board from a specific word list."""
+        n = len(grid)
+        word = prefix + grid[x][y]
+
+        # Check if this could be a prefix of any word in our list
+        if not any(w.startswith(word) for w in word_set):
+            return
+
+        if len(word) >= min_length and word in word_set:
+            results.add(word)
+
+        for nx, ny in self._get_neighbors(n, x, y):
+            if (nx, ny) not in visited:
+                self._dfs_find_words_from_list(grid, nx, ny, visited | {(nx, ny)}, word, results, min_length, word_set)
+
     async def _do_generate_board(self, request: BoardGenerationRequest, rng: random.Random) -> BoardGenerationResponse:
         await self.ensure_loaded()
 
@@ -335,6 +447,42 @@ class BoardService:
         board = await self._do_generate_board(request, random.Random(seed))
         self._put_in_cache(seed, board)
         return board
+
+    async def generate_board_from_words(
+        self, request: WordBasedBoardGenerationRequest, *, seed: int | None = None
+    ) -> BoardGenerationResponse:
+        """Generate a board using only words from the input list."""
+        rng = random.Random(seed) if seed is not None else random.Random()
+
+        # Filter words by minimum length
+        valid_words = [word.upper().strip() for word in request.words if len(word.strip()) >= request.min_word_length]
+
+        if not valid_words:
+            raise ValueError(f"No valid words found with minimum length {request.min_word_length}")
+
+        # Try to place words on the board
+        grid = self._generate_board_from_word_list(request.board_size, valid_words, rng)
+
+        # Find all words on the board using only the input word list
+        found_words = sorted(self._find_words_from_list(grid, valid_words, request.min_word_length))
+
+        # Validate that only input words are found
+        input_words_set = set(valid_words)
+        invalid_words = [word for word in found_words if word not in input_words_set]
+
+        if invalid_words:
+            # If we found words not in the input list, try to regenerate
+            # This can happen if random letters form unintended words
+            for _ in range(10):  # Try up to 10 times
+                grid = self._generate_board_from_word_list(request.board_size, valid_words, rng)
+                found_words = sorted(self._find_words_from_list(grid, valid_words, request.min_word_length))
+                invalid_words = [word for word in found_words if word not in input_words_set]
+                if not invalid_words:
+                    break
+
+        richness_score = self._compute_richness(found_words, request.board_size)
+
+        return BoardGenerationResponse(grid=grid, richness=richness_score, words=found_words)
 
     def validate_move(self, request: MoveValidationRequest) -> MoveValidationResponse:
         """Validate a move on a board and calculate its score."""

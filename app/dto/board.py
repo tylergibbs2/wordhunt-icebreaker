@@ -20,6 +20,12 @@ class BoardGenerationRequest(BaseModel):
     min_word_count: int = Field(default=0, ge=0, description="Minimum number of words required")
 
 
+class WordBasedBoardGenerationRequest(BaseModel):
+    board_size: int = Field(..., ge=3, le=10, description="Size of the board (3-10)")
+    words: list[str] = Field(..., min_length=1, description="List of words to place on the board")
+    min_word_length: int = Field(default=3, ge=3, le=15, description="Minimum word length")
+
+
 class BoardGenerationResponse(UnresolvedBoard):
     richness: float = Field(..., description="0-1 float richness score")
     words: list[str] = Field(..., description="List of words found on the board")

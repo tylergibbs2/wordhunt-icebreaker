@@ -11,6 +11,7 @@ from app.dto.board import (
     MoveValidationRequest,
     MoveValidationResponse,
     UnresolvedBoard,
+    WordBasedBoardGenerationRequest,
 )
 from app.service.board_service import (
     BoardService,
@@ -561,3 +562,278 @@ def test_validate_move_maximum_length(board_service: BoardService):
     # This should fail Pydantic validation
     with pytest.raises(ValidationError):  # Pydantic validation error
         MoveValidationRequest(board=board, move_coordinates=long_coordinates)
+
+
+# Word-based board generation tests
+async def test_generate_board_from_words_success(board_service: BoardService):
+    """Test successful word-based board generation."""
+    service = board_service
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "DOG", "BAT", "RAT"], min_word_length=3)
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    assert isinstance(result, BoardGenerationResponse)
+    assert result.size == 4
+    assert len(result.grid) == 4
+    assert all(len(row) == 4 for row in result.grid)
+    assert 0.0 <= result.richness <= 1.0
+    assert isinstance(result.words, list)
+    # All found words should be from the input list
+    input_words_set = set(request.words)
+    for word in result.words:
+        assert word in input_words_set
+
+
+async def test_generate_board_from_words_deterministic(mock_wordlist_path: Path):
+    """Test that seeded word-based generation produces deterministic results."""
+    service1 = BoardService(wordlist_path=mock_wordlist_path)
+    service2 = BoardService(wordlist_path=mock_wordlist_path)
+    BoardService.clear_cache()
+
+    await service1._load_dictionary()
+    await service2._load_dictionary()
+
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "DOG", "BAT", "RAT"], min_word_length=3)
+
+    result1 = await service1.generate_board_from_words(request, seed=123)
+    result2 = await service2.generate_board_from_words(request, seed=123)
+
+    # Results should be identical with same seed
+    assert result1.grid == result2.grid
+    assert result1.richness == result2.richness
+    assert result1.words == result2.words
+
+
+async def test_generate_board_from_words_different_seeds(mock_wordlist_path: Path):
+    """Test that different seeds produce different boards."""
+    service1 = BoardService(wordlist_path=mock_wordlist_path)
+    service2 = BoardService(wordlist_path=mock_wordlist_path)
+    BoardService.clear_cache()
+
+    await service1._load_dictionary()
+    await service2._load_dictionary()
+
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "DOG", "BAT", "RAT"], min_word_length=3)
+
+    result1 = await service1.generate_board_from_words(request, seed=111)
+    result2 = await service2.generate_board_from_words(request, seed=222)
+
+    # Results should be different
+    assert result1.grid != result2.grid
+
+
+async def test_generate_board_from_words_no_valid_words():
+    """Test word-based generation with no valid words."""
+    service = BoardService()
+    request = WordBasedBoardGenerationRequest(
+        board_size=4,
+        words=["AB", "CD"],
+        min_word_length=3,  # All words too short
+    )
+
+    with pytest.raises(ValueError, match="No valid words found with minimum length 3"):
+        await service.generate_board_from_words(request)
+
+
+async def test_generate_board_from_words_word_filtering(board_service: BoardService):
+    """Test that word filtering works correctly."""
+    service = board_service
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "DOG", "AB", "BAT", "CD"], min_word_length=3)
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    # Should only use words >= 3 characters
+    input_words_set = set(["CAT", "DOG", "BAT"])  # Filtered words
+    for word in result.words:
+        assert word in input_words_set
+
+
+async def test_generate_board_from_words_case_handling(board_service: BoardService):
+    """Test that case handling works correctly."""
+    service = board_service
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["cat", "DOG", "Bat", "rat"], min_word_length=3)
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    # Should find words regardless of original case
+    input_words_set = set(["CAT", "DOG", "BAT", "RAT"])  # Normalized to uppercase
+    for word in result.words:
+        assert word in input_words_set
+
+
+def test_find_words_from_list(board_service: BoardService):
+    """Test finding words from a specific word list."""
+    service = board_service
+    grid = [["C", "A", "T"], ["D", "O", "G"], ["B", "A", "T"]]
+    word_list = ["CAT", "DOG", "BAT", "RAT", "COAT"]
+
+    words = service._find_words_from_list(grid, word_list, min_length=3)
+
+    assert isinstance(words, set)
+    # Should find words that are in the word list
+    for word in words:
+        assert word in word_list
+        assert len(word) >= 3
+
+
+def test_dfs_find_words_from_list(board_service: BoardService):
+    """Test depth-first search for words from a specific list."""
+    service = board_service
+    grid = [["C", "A", "T"], ["D", "O", "G"], ["B", "A", "T"]]
+    word_set = {"CAT", "DOG", "BAT", "RAT"}
+    results = set()
+
+    service._dfs_find_words_from_list(grid, 0, 0, {(0, 0)}, "", results, 3, word_set)
+
+    # Should find words starting from (0,0) that are in the word set
+    assert isinstance(results, set)
+
+
+def test_generate_board_from_word_list(board_service: BoardService):
+    """Test board generation from word list."""
+    service = board_service
+    words = ["CAT", "DOG", "BAT"]
+    board_size = 4
+
+    grid = service._generate_board_from_word_list(board_size, words, random.Random(42))
+
+    assert len(grid) == board_size
+    assert all(len(row) == board_size for row in grid)
+    # All cells should be filled
+    assert all(letter != "" for row in grid for letter in row)
+
+
+def test_try_place_word_success(board_service: BoardService):
+    """Test successful word placement."""
+    service = board_service
+    grid = [["", "", ""], ["", "", ""], ["", "", ""]]
+    word = "CAT"
+
+    success = service._try_place_word(grid, word, random.Random(42))
+
+    assert success is True
+    # Check that the word letters are in the grid
+    grid_letters = [letter for row in grid for letter in row]
+    assert "C" in grid_letters
+    assert "A" in grid_letters
+    assert "T" in grid_letters
+
+
+def test_try_place_word_failure(board_service: BoardService):
+    """Test word placement failure with impossible word."""
+    service = board_service
+    grid = [["X", "X"], ["X", "X"]]  # 2x2 grid too small for long word
+    word = "VERYLONGWORD"
+
+    success = service._try_place_word(grid, word, random.Random(42))
+
+    assert success is False
+
+
+def test_can_place_word_at_position(board_service: BoardService):
+    """Test word placement validation."""
+    service = board_service
+    grid = [["", "", ""], ["", "", ""], ["", "", ""]]
+    word = "CAT"
+
+    # Test valid placement
+    assert service._can_place_word_at_position(grid, word, 0, 0, 0, 1) is True  # Horizontal
+    assert service._can_place_word_at_position(grid, word, 0, 0, 1, 0) is True  # Vertical
+
+    # Test invalid placement (out of bounds)
+    assert service._can_place_word_at_position(grid, word, 0, 0, 0, -1) is False  # Left
+    assert service._can_place_word_at_position(grid, word, 2, 2, 1, 1) is False  # Right-bottom
+
+
+def test_place_word_at_position(board_service: BoardService):
+    """Test word placement execution."""
+    service = board_service
+    grid = [["", "", ""], ["", "", ""], ["", "", ""]]
+    word = "CAT"
+
+    service._place_word_at_position(grid, word, 0, 0, 0, 1)  # Place horizontally
+
+    assert grid[0][0] == "C"
+    assert grid[0][1] == "A"
+    assert grid[0][2] == "T"
+
+
+async def test_generate_board_from_words_large_board(board_service: BoardService):
+    """Test word-based generation with larger board."""
+    service = board_service
+    request = WordBasedBoardGenerationRequest(
+        board_size=6, words=["CAT", "DOG", "BAT", "RAT", "COAT", "BOAT"], min_word_length=3
+    )
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    assert result.size == 6
+    assert len(result.grid) == 6
+    assert all(len(row) == 6 for row in result.grid)
+    assert 0.0 <= result.richness <= 1.0
+
+
+async def test_generate_board_from_words_minimum_length_filtering(board_service: BoardService):
+    """Test that minimum length filtering works correctly."""
+    service = board_service
+    request = WordBasedBoardGenerationRequest(
+        board_size=4, words=["CAT", "DOG", "BAT", "RAT", "COAT"], min_word_length=4
+    )
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    # Should only use words >= 4 characters
+    input_words_set = set(["COAT"])  # Only word >= 4 chars
+    for word in result.words:
+        assert word in input_words_set
+        assert len(word) >= 4
+
+
+async def test_generate_board_from_words_retry_logic(board_service: BoardService):
+    """Test that retry logic works when random letters form unintended words."""
+    service = board_service
+    # Use words that are unlikely to form other words when placed
+    request = WordBasedBoardGenerationRequest(board_size=3, words=["CAT", "DOG"], min_word_length=3)
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    # Should succeed and only contain input words
+    input_words_set = set(request.words)
+    for word in result.words:
+        assert word in input_words_set
+
+
+def test_generate_board_from_words_empty_input():
+    """Test word-based generation with empty word list."""
+    # Test that Pydantic validation prevents empty word list
+    with pytest.raises(ValidationError, match="List should have at least 1 item"):
+        WordBasedBoardGenerationRequest(board_size=4, words=[], min_word_length=3)
+
+
+async def test_generate_board_from_words_single_word(board_service: BoardService):
+    """Test word-based generation with single word."""
+    service = board_service
+    request = WordBasedBoardGenerationRequest(board_size=3, words=["CAT"], min_word_length=3)
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    assert isinstance(result, BoardGenerationResponse)
+    assert result.size == 3
+    assert len(result.grid) == 3
+    # Should contain the input word
+    assert "CAT" in result.words
+
+
+async def test_generate_board_from_words_word_overlap(board_service: BoardService):
+    """Test that overlapping words are handled correctly."""
+    service = board_service
+    # Use words that can share letters
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "CAR", "BAT", "BAR"], min_word_length=3)
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    assert isinstance(result, BoardGenerationResponse)
+    # Should find some of the input words
+    input_words_set = set(request.words)
+    found_input_words = [word for word in result.words if word in input_words_set]
+    assert len(found_input_words) > 0
