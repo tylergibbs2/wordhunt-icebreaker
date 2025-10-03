@@ -80,10 +80,21 @@
   font-weight: bold;
 }
 
+.letter-details {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.letter-details span:last-child {
+  color: #10b981;
+  font-weight: normal;
+}
+
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .scoring-breakdown-mini {
-    top: 10px;
+    top: auto;
+    bottom: 20px;
     left: 10px;
     font-size: 11px;
     padding: 10px 12px;

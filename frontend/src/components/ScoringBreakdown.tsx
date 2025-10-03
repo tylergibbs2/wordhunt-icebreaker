@@ -1,5 +1,9 @@
 import React, { useEffect } from 'react';
-import { getScoreBreakdown, type TilePosition } from '../utils/scoring';
+import {
+  getScoreBreakdown,
+  SCORING,
+  type TilePosition,
+} from '../utils/scoring';
 import './ScoringBreakdown.css';
 
 interface ScoringBreakdownProps {
@@ -42,6 +46,23 @@ export const ScoringBreakdown: React.FC<ScoringBreakdownProps> = ({
     replacementCounts
   );
 
+  // Get letter bonus details
+  const letterBonusDetails = word
+    .toUpperCase()
+    .split('')
+    .map(letter => ({
+      letter,
+      bonus:
+        SCORING.LETTER_BONUSES[letter as keyof typeof SCORING.LETTER_BONUSES] ||
+        0,
+    }))
+    .filter(detail => detail.bonus > 0);
+
+  const letterBonusText =
+    letterBonusDetails.length > 0
+      ? letterBonusDetails.map(d => `${d.letter}(+${d.bonus})`).join(' ')
+      : 'None';
+
   return (
     <div className="scoring-breakdown-mini">
       <div className="scoring-header-mini">
@@ -61,6 +82,14 @@ export const ScoringBreakdown: React.FC<ScoringBreakdownProps> = ({
         <div className="score-line">
           <span>Depth:</span>
           <span>+{breakdown.depthBonus}</span>
+        </div>
+        <div className="score-line">
+          <span>Letters:</span>
+          <span>+{breakdown.letterBonus}</span>
+        </div>
+        <div className="score-line letter-details">
+          <span>Rare:</span>
+          <span>{letterBonusText}</span>
         </div>
         <div className="score-line">
           <span>Combo:</span>

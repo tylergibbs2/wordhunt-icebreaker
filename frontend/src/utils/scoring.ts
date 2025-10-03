@@ -4,9 +4,20 @@ export const SCORING = {
   STRESS_BONUS: [10, 10, 0], // Reduced stress bonuses to emphasize word length
   DEPTH_BONUS: [0, 10, 20, 30, 40], // Reduced depth bonuses to emphasize word length
   COMBO_MULTIPLIERS: {
-    ALL_RED: 1.5, // Reduced multiplier to emphasize word length
-    ALL_SAME: 1.25, // Reduced multiplier to emphasize word length
+    ALL_RED: 2.0, // Double score for all red tiles - exciting but competitive
+    ALL_SAME: 1.5, // 50% bonus for same stress level - meaningful reward
     MIXED: 1.0,
+  },
+  LETTER_BONUSES: {
+    Q: 5,
+    Z: 5,
+    X: 4,
+    J: 4, // Rare letters get small bonuses
+    K: 2,
+    V: 2,
+    W: 2,
+    Y: 2, // Uncommon letters get tiny bonuses
+    // Common letters: no bonus
   },
 };
 
@@ -26,7 +37,15 @@ export function calculateScore(
 
   let stressBonus = 0;
   let depthBonus = 0;
+  let letterBonus = 0;
   const stressTypes = new Set<number>();
+
+  // Calculate letter bonuses
+  for (const letter of word.toUpperCase()) {
+    letterBonus +=
+      SCORING.LETTER_BONUSES[letter as keyof typeof SCORING.LETTER_BONUSES] ||
+      0;
+  }
 
   selectedTiles.forEach(tile => {
     const stress = stressLevels[tile.row][tile.col];
@@ -48,7 +67,8 @@ export function calculateScore(
         : SCORING.COMBO_MULTIPLIERS.ALL_SAME;
   }
 
-  const rawScore = (baseScore + stressBonus + depthBonus) * multiplier;
+  const rawScore =
+    (baseScore + stressBonus + depthBonus + letterBonus) * multiplier;
 
   // Round to nearest multiple of 25
   return Math.round(rawScore / 25) * 25;
@@ -66,6 +86,7 @@ export function getScoreBreakdown(
 
   let stressBonus = 0;
   let depthBonus = 0;
+  let letterBonus = 0;
   const stressTypes = new Set<number>();
   const tileDetails: Array<{
     stress: number;
@@ -73,6 +94,13 @@ export function getScoreBreakdown(
     stressBonus: number;
     depthBonus: number;
   }> = [];
+
+  // Calculate letter bonuses
+  for (const letter of word.toUpperCase()) {
+    letterBonus +=
+      SCORING.LETTER_BONUSES[letter as keyof typeof SCORING.LETTER_BONUSES] ||
+      0;
+  }
 
   selectedTiles.forEach(tile => {
     const stress = stressLevels[tile.row][tile.col];
@@ -108,7 +136,8 @@ export function getScoreBreakdown(
     }
   }
 
-  const rawScore = (baseScore + stressBonus + depthBonus) * multiplier;
+  const rawScore =
+    (baseScore + stressBonus + depthBonus + letterBonus) * multiplier;
 
   // Round to nearest multiple of 25
   const finalScore = Math.round(rawScore / 25) * 25;
@@ -120,6 +149,7 @@ export function getScoreBreakdown(
     baseScore,
     stressBonus,
     depthBonus,
+    letterBonus,
     multiplier,
     comboType,
     rawScore,
