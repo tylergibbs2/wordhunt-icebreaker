@@ -9,8 +9,13 @@ import { Timer } from './Timer';
 import { GameResults, type WordResult } from './GameResults';
 import { ErrorPopup } from './ErrorPopup';
 import { DailyScoreCounter } from './DailyScoreCounter';
+import { ScoringBreakdown } from './ScoringBreakdown';
 import { useDictionaryContext } from './DictionaryProvider';
-import { calculateScore, getScoreBreakdown } from '../utils/scoring';
+import {
+  calculateScore,
+  getScoreBreakdown,
+  type TilePosition,
+} from '../utils/scoring';
 import {
   hasPlayedToday,
   markDayAsPlayed,
@@ -59,6 +64,21 @@ export const Board = () => {
   const [gameEnded, setGameEnded] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [wordHistory, setWordHistory] = useState<WordResult[]>([]);
+  const [scoringBreakdown, setScoringBreakdown] = useState<{
+    word: string;
+    selectedTiles: TilePosition[];
+    stressLevels: number[][];
+    replacementCounts: Map<string, number>;
+    score: number;
+    isVisible: boolean;
+  }>({
+    word: '',
+    selectedTiles: [],
+    stressLevels: [],
+    replacementCounts: new Map(),
+    score: 0,
+    isVisible: false,
+  });
 
   // Function to remove a score popup when its animation completes
   const removeScorePopup = (id: string) => {
@@ -68,6 +88,11 @@ export const Board = () => {
   // Function to remove an error popup when its animation completes
   const removeErrorPopup = (id: string) => {
     setErrorPopups(prev => prev.filter(popup => popup.id !== id));
+  };
+
+  // Function to handle scoring breakdown completion
+  const handleScoringBreakdownComplete = () => {
+    setScoringBreakdown(prev => ({ ...prev, isVisible: false }));
   };
 
   // Function to get path color based on word validity
@@ -284,6 +309,16 @@ export const Board = () => {
           replacementCounts
         );
         console.log('Score Breakdown:', breakdown);
+
+        // Show scoring breakdown
+        setScoringBreakdown({
+          word,
+          selectedTiles: [...selectedTiles], // Create a copy to ensure proper state update
+          stressLevels: [...stressLevels.map(row => [...row])], // Deep copy
+          replacementCounts: new Map(replacementCounts), // Copy the map
+          score,
+          isVisible: true,
+        });
 
         // Add score popup
         const popupId = `score-${Date.now()}-${Math.random()}`;
@@ -634,6 +669,18 @@ export const Board = () => {
           onComplete={() => removePixelExplosion(explosion.id)}
         />
       ))}
+
+      {/* Scoring Breakdown */}
+      <ScoringBreakdown
+        key={`${scoringBreakdown.word}-${scoringBreakdown.score}`}
+        word={scoringBreakdown.word}
+        selectedTiles={scoringBreakdown.selectedTiles}
+        stressLevels={scoringBreakdown.stressLevels}
+        replacementCounts={scoringBreakdown.replacementCounts}
+        score={scoringBreakdown.score}
+        isVisible={scoringBreakdown.isVisible}
+        onComplete={handleScoringBreakdownComplete}
+      />
     </div>
   );
 };
