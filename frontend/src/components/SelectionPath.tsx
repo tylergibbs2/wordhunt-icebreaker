@@ -72,78 +72,35 @@ export const SelectionPath: React.FC<SelectionPathProps> = ({
           );
         })()
       ) : (
-        // Multiple tiles - show path
+        // Multiple tiles - show continuous path
         <>
-          {/* Pixelated path using rectangles */}
-          {selectedTiles.map((tile, index) => {
-            if (index === 0) return null; // Skip first tile, handled by circle
+          {/* Single continuous path */}
+          {(() => {
+            if (selectedTiles.length < 2) return null;
 
-            const coords = getTileCoordinates(tile);
+            // Build the path string
+            let pathData = '';
+            const firstCoords = getTileCoordinates(selectedTiles[0]);
+            pathData += `M ${firstCoords.x} ${firstCoords.y}`;
+
+            // Add lines to each subsequent tile
+            for (let i = 1; i < selectedTiles.length; i++) {
+              const coords = getTileCoordinates(selectedTiles[i]);
+              pathData += ` L ${coords.x} ${coords.y}`;
+            }
+
             return (
-              <rect
-                key={`path-${tile.row}-${tile.col}`}
-                x={coords.x - 12}
-                y={coords.y - 12}
-                width="24"
-                height="24"
-                fill={pathColor}
-                opacity="0.4"
+              <path
+                d={pathData}
+                stroke={pathColor}
+                strokeWidth="24"
+                fill="none"
+                opacity="0.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             );
-          })}
-
-          {/* Connection lines between tiles */}
-          {selectedTiles.map((tile, index) => {
-            if (index === selectedTiles.length - 1) return null; // Skip last tile
-
-            const nextTile = selectedTiles[index + 1];
-            const coords1 = getTileCoordinates(tile);
-            const coords2 = getTileCoordinates(nextTile);
-
-            // Determine if it's horizontal or vertical connection
-            if (tile.row === nextTile.row) {
-              // Horizontal connection
-              return (
-                <rect
-                  key={`conn-${index}`}
-                  x={Math.min(coords1.x, coords2.x) - 12}
-                  y={coords1.y - 12}
-                  width={Math.abs(coords2.x - coords1.x) + 24}
-                  height="24"
-                  fill={pathColor}
-                  opacity="0.4"
-                />
-              );
-            } else if (tile.col === nextTile.col) {
-              // Vertical connection
-              return (
-                <rect
-                  key={`conn-${index}`}
-                  x={coords1.x - 12}
-                  y={Math.min(coords1.y, coords2.y) - 12}
-                  width="24"
-                  height={Math.abs(coords2.y - coords1.y) + 24}
-                  fill={pathColor}
-                  opacity="0.4"
-                />
-              );
-            } else {
-              // Diagonal connection - use a single thick line
-              return (
-                <line
-                  key={`diag-${index}`}
-                  x1={coords1.x}
-                  y1={coords1.y}
-                  x2={coords2.x}
-                  y2={coords2.y}
-                  stroke={pathColor}
-                  strokeWidth="24"
-                  opacity="0.4"
-                  strokeLinecap="round"
-                />
-              );
-            }
-          })}
+          })()}
 
           {/* Direction indicator arrow at the end */}
           {selectedTiles.length > 1 &&
