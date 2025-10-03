@@ -4,33 +4,51 @@ const DAILY_RESULTS_KEY = 'wordhunt-daily-results';
 
 export const hasPlayedToday = (currentDay: string): boolean => {
   try {
+    if (typeof localStorage === 'undefined') {
+      return false;
+    }
+
     const playedDays = JSON.parse(
       localStorage.getItem(PLAYED_DAYS_KEY) || '[]'
     );
-    return playedDays.includes(currentDay);
-  } catch {
+    return Array.isArray(playedDays) && playedDays.includes(currentDay);
+  } catch (error) {
+    console.warn('Failed to check if played today:', error);
     return false;
   }
 };
 
 export const markDayAsPlayed = (currentDay: string): void => {
   try {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+
     const playedDays = JSON.parse(
       localStorage.getItem(PLAYED_DAYS_KEY) || '[]'
     );
-    if (!playedDays.includes(currentDay)) {
+
+    if (Array.isArray(playedDays) && !playedDays.includes(currentDay)) {
       playedDays.push(currentDay);
       localStorage.setItem(PLAYED_DAYS_KEY, JSON.stringify(playedDays));
     }
-  } catch {
-    // If localStorage fails, silently continue
+  } catch (error) {
+    console.warn('Failed to mark day as played:', error);
   }
 };
 
 export const getPlayedDays = (): string[] => {
   try {
-    return JSON.parse(localStorage.getItem(PLAYED_DAYS_KEY) || '[]');
-  } catch {
+    if (typeof localStorage === 'undefined') {
+      return [];
+    }
+
+    const playedDays = JSON.parse(
+      localStorage.getItem(PLAYED_DAYS_KEY) || '[]'
+    );
+    return Array.isArray(playedDays) ? playedDays : [];
+  } catch (error) {
+    console.warn('Failed to get played days:', error);
     return [];
   }
 };
@@ -54,7 +72,13 @@ export const saveDailyResults = (
   words: DailyResult['words']
 ): void => {
   try {
-    const maxScore = Math.max(...words.map(w => w.score), 0);
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+
+    // Handle empty words array safely
+    const maxScore =
+      words.length > 0 ? Math.max(...words.map(w => w.score), 0) : 0;
     const totalScore = words.reduce((sum, w) => sum + w.score, 0);
 
     const result: DailyResult = {
@@ -65,7 +89,7 @@ export const saveDailyResults = (
       wordCount: words.length,
     };
 
-    // Get existing results
+    // Get existing results (handles both old and new formats)
     const existingResults = getAllDailyResults();
 
     // Update or add the new result
@@ -75,8 +99,9 @@ export const saveDailyResults = (
     };
 
     localStorage.setItem(DAILY_RESULTS_KEY, JSON.stringify(updatedResults));
-  } catch {
+  } catch (error) {
     // If localStorage fails, silently continue
+    console.warn('Failed to save daily results:', error);
   }
 };
 
@@ -99,9 +124,68 @@ export const getDailyResults = (day?: string): DailyResult | null => {
 
 export const getAllDailyResults = (): Record<string, DailyResult> => {
   try {
+    // Check if localStorage is available
+    if (typeof localStorage === 'undefined') {
+      return {};
+    }
+
     const results = localStorage.getItem(DAILY_RESULTS_KEY);
-    return results ? JSON.parse(results) : {};
-  } catch {
+    if (!results) {
+      return {};
+    }
+
+    const parsed = JSON.parse(results);
+
+    // Handle old format (single DailyResult object)
+    if (parsed && typeof parsed === 'object' && parsed.day) {
+      // This is the old format - return it as a single entry
+      return {
+        [parsed.day]: {
+          day: parsed.day,
+          words: Array.isArray(parsed.words) ? parsed.words : [],
+          maxScore: typeof parsed.maxScore === 'number' ? parsed.maxScore : 0,
+          totalScore:
+            typeof parsed.totalScore === 'number' ? parsed.totalScore : 0,
+          wordCount:
+            typeof parsed.wordCount === 'number' ? parsed.wordCount : 0,
+        },
+      };
+    }
+
+    // Handle new format (Record<string, DailyResult>)
+    if (parsed && typeof parsed === 'object' && !parsed.day) {
+      // Validate that it's an object with valid results
+      const validResults: Record<string, DailyResult> = {};
+
+      for (const [day, result] of Object.entries(parsed)) {
+        if (result && typeof result === 'object' && 'day' in result) {
+          const dailyResult = result as any; // Type assertion for old format compatibility
+          validResults[day] = {
+            day: dailyResult.day,
+            words: Array.isArray(dailyResult.words) ? dailyResult.words : [],
+            maxScore:
+              typeof dailyResult.maxScore === 'number'
+                ? dailyResult.maxScore
+                : 0,
+            totalScore:
+              typeof dailyResult.totalScore === 'number'
+                ? dailyResult.totalScore
+                : 0,
+            wordCount:
+              typeof dailyResult.wordCount === 'number'
+                ? dailyResult.wordCount
+                : 0,
+          };
+        }
+      }
+
+      return validResults;
+    }
+
+    // Invalid format
+    return {};
+  } catch (error) {
+    console.warn('Failed to get daily results:', error);
     return {};
   }
 };
@@ -129,24 +213,54 @@ export const getHistoricalStats = (): {
       };
     }
 
-    const bestTotalScore = Math.max(...results.map(r => r.totalScore));
-    const bestMaxScore = Math.max(...results.map(r => r.maxScore));
-    const totalWordsFound = results.reduce((sum, r) => sum + r.wordCount, 0);
-    const averageScore =
-      results.reduce((sum, r) => sum + r.totalScore, 0) / results.length;
+    // Filter out any invalid results
+    const validResults = results.filter(
+      r =>
+        r &&
+        typeof r.totalScore === 'number' &&
+        typeof r.maxScore === 'number' &&
+        typeof r.wordCount === 'number' &&
+        !isNaN(r.totalScore) &&
+        !isNaN(r.maxScore) &&
+        !isNaN(r.wordCount)
+    );
 
-    const bestDayResult = results.find(r => r.totalScore === bestTotalScore);
+    if (validResults.length === 0) {
+      return {
+        totalDaysPlayed: 0,
+        bestTotalScore: 0,
+        bestMaxScore: 0,
+        averageScore: 0,
+        totalWordsFound: 0,
+        bestDay: '',
+      };
+    }
+
+    const bestTotalScore = Math.max(...validResults.map(r => r.totalScore));
+    const bestMaxScore = Math.max(...validResults.map(r => r.maxScore));
+    const totalWordsFound = validResults.reduce(
+      (sum, r) => sum + r.wordCount,
+      0
+    );
+    const averageScore =
+      validResults.reduce((sum, r) => sum + r.totalScore, 0) /
+      validResults.length;
+
+    const bestDayResult = validResults.find(
+      r => r.totalScore === bestTotalScore
+    );
     const bestDay = bestDayResult ? bestDayResult.day : '';
 
     return {
-      totalDaysPlayed: results.length,
-      bestTotalScore,
-      bestMaxScore,
-      averageScore: Math.round(averageScore),
-      totalWordsFound,
-      bestDay,
+      totalDaysPlayed: validResults.length,
+      bestTotalScore: bestTotalScore || 0,
+      bestMaxScore: bestMaxScore || 0,
+      averageScore: Math.round(averageScore) || 0,
+      totalWordsFound: totalWordsFound || 0,
+      bestDay: bestDay || '',
     };
-  } catch {
+  } catch (error) {
+    console.warn('Failed to get historical stats:', error);
     return {
       totalDaysPlayed: 0,
       bestTotalScore: 0,

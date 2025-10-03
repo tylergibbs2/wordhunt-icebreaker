@@ -22,7 +22,9 @@ export const GameResults: React.FC<GameResultsProps> = ({
   showOverlay = true,
   day,
 }) => {
-  const maxScore = Math.max(...words.map(w => w.score), 0);
+  // Handle empty words array safely
+  const maxScore =
+    words.length > 0 ? Math.max(...words.map(w => w.score), 0) : 0;
   const totalScore = words.reduce((sum, w) => sum + w.score, 0);
 
   // Get historical stats for comparison
