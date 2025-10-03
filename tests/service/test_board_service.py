@@ -37,6 +37,7 @@ async def board_service(mock_wordlist_path: Path) -> BoardService:
     """Create a BoardService instance for testing."""
     service = BoardService(wordlist_path=mock_wordlist_path)
     await service._load_dictionary()
+    service.clear_cache()
     return service
 
 
@@ -253,6 +254,7 @@ async def test_generate_rich_board_deterministic(mock_wordlist_path: Path):
     """Test that seeded random produces deterministic results."""
     service1 = BoardService(wordlist_path=mock_wordlist_path)
     service2 = BoardService(wordlist_path=mock_wordlist_path)
+    BoardService.clear_cache()
 
     await service1._load_dictionary()
     await service2._load_dictionary()
@@ -315,6 +317,7 @@ async def test_deterministic_board_generation_with_same_seed(mock_wordlist_path:
     # Create two services with same seed
     service1 = BoardService(wordlist_path=mock_wordlist_path)
     service2 = BoardService(wordlist_path=mock_wordlist_path)
+    BoardService.clear_cache()
 
     # Load dictionaries
     await service1._load_dictionary()
@@ -336,6 +339,7 @@ async def test_different_seeds_produce_different_boards(mock_wordlist_path: Path
     # Create two services with different seeds
     service1 = BoardService(wordlist_path=mock_wordlist_path)
     service2 = BoardService(wordlist_path=mock_wordlist_path)
+    BoardService.clear_cache()
 
     # Load dictionaries
     await service1._load_dictionary()
@@ -354,6 +358,7 @@ async def test_board_generation_with_custom_random_generator(mock_wordlist_path:
     """Test board generation with custom random generator."""
     # Create custom random generator
     service = BoardService(wordlist_path=mock_wordlist_path, seed=42)
+    BoardService.clear_cache()
 
     # Load dictionary
     await service._load_dictionary()
@@ -387,6 +392,7 @@ def test_board_richness_calculation_edge_cases(board_service: BoardService):
 async def test_board_generation_with_high_richness_target(mock_wordlist_path: Path):
     """Test board generation with high richness target."""
     service = BoardService(wordlist_path=mock_wordlist_path)
+    BoardService.clear_cache()
     await service._load_dictionary()
 
     request = BoardGenerationRequest(board_size=6, target_richness=0.9, min_word_length=4, min_word_count=5)
@@ -481,6 +487,7 @@ def test_validate_move_not_loaded():
     BoardService._trie_root = None
 
     service = BoardService()
+    BoardService.clear_cache()
     grid = [["C", "A", "T"], ["D", "O", "G"], ["B", "A", "T"]]
     board = UnresolvedBoard(grid=grid)
 

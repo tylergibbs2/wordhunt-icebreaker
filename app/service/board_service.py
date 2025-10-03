@@ -410,6 +410,11 @@ class BoardService:
         return length_score + letter_bonus
 
     @classmethod
+    def clear_cache(cls) -> None:
+        """Clear the cache."""
+        cls._cache.clear()
+
+    @classmethod
     def _manage_cache_size(cls) -> None:
         """Remove oldest entries if cache exceeds max size."""
         while len(cls._cache) > cls._max_cache_size:
