@@ -84,13 +84,11 @@ def test_move_validation_request_validation():
 def test_move_validation_response_validation():
     """Test MoveValidationResponse validation."""
     # Test valid response
-    response = MoveValidationResponse(is_valid=True, word="CAT", score=100)
+    response = MoveValidationResponse(is_valid=True, word="CAT")
     assert response.is_valid is True
     assert response.word == "CAT"
-    assert response.score == 100
 
     # Test invalid response
-    response = MoveValidationResponse(is_valid=False, word="", score=0)
+    response = MoveValidationResponse(is_valid=False, word="")
     assert response.is_valid is False
     assert response.word == ""
-    assert response.score == 0

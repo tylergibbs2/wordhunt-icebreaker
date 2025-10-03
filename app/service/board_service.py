@@ -347,67 +347,15 @@ class BoardService:
             return MoveValidationResponse(
                 is_valid=False,
                 word=word,
-                score=0,
             )
 
         # Check if word is valid (at least a prefix)
         is_word = self._is_word(word)
-        # Calculate score based on word length and letter values
-        score = self._calculate_word_score(word)
 
         return MoveValidationResponse(
             is_valid=is_word,
             word=word,
-            score=score,
         )
-
-    def _calculate_word_score(self, word: str) -> int:
-        """Calculate the score for a word based on length and letter values."""
-        if not word:
-            return 0
-
-        # Base score from word length
-        length_score = len(word) * 10
-
-        # Bonus for longer words
-        if len(word) >= 6:
-            length_score += (len(word) - 5) * 20  # Extra 20 points per letter over 5
-        if len(word) >= 9:
-            length_score += (len(word) - 8) * 30  # Extra 30 points per letter over 8
-
-        # Letter value bonuses (common letters worth less, rare letters worth more)
-        letter_values = {
-            "E": 1,
-            "A": 1,
-            "I": 1,
-            "O": 1,
-            "U": 1,
-            "R": 1,
-            "S": 1,
-            "T": 1,
-            "L": 1,
-            "N": 1,
-            "D": 2,
-            "G": 2,
-            "B": 2,
-            "C": 2,
-            "M": 2,
-            "P": 2,
-            "F": 2,
-            "H": 2,
-            "V": 2,
-            "W": 2,
-            "Y": 2,
-            "K": 3,
-            "J": 3,
-            "X": 3,
-            "Q": 4,
-            "Z": 4,
-        }
-
-        letter_bonus = sum(letter_values.get(letter, 1) for letter in word)
-
-        return length_score + letter_bonus
 
     @classmethod
     def clear_cache(cls) -> None:

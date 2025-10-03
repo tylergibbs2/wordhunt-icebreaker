@@ -81,4 +81,3 @@ class MoveValidationResponse(BaseModel):
 
     is_valid: bool = Field(description="Whether the move is valid")
     word: str = Field(description="The word formed by the move")
-    score: int = Field(description="The score for the word")

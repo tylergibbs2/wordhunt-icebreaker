@@ -418,7 +418,6 @@ def test_validate_move_success(board_service: BoardService):
     assert isinstance(response, MoveValidationResponse)
     assert response.is_valid is True
     assert response.word == "CAT"
-    assert response.score > 0
 
 
 def test_validate_move_invalid_path():
@@ -476,7 +475,6 @@ def test_validate_move_diagonal_path(board_service: BoardService):
 
     assert response.is_valid is True
     assert response.word == "CAT"
-    assert response.score > 0
 
 
 def test_validate_move_not_loaded():
@@ -497,27 +495,6 @@ def test_validate_move_not_loaded():
         service.validate_move(request)
 
 
-def test_calculate_word_score(board_service: BoardService):
-    """Test word score calculation."""
-    service = board_service
-
-    # Test short word
-    score_short = service._calculate_word_score("CAT")
-    assert score_short > 0
-
-    # Test longer word (should get bonus)
-    score_long = service._calculate_word_score("CATALOG")
-    assert score_long > score_short
-
-    # Test very long word (should get more bonus)
-    score_very_long = service._calculate_word_score("CATALOGUING")
-    assert score_very_long > score_long
-
-    # Test empty word
-    score_empty = service._calculate_word_score("")
-    assert score_empty == 0
-
-
 def test_validate_move_prefix_only(board_service: BoardService):
     """Test move validation with word that's only a prefix, not complete word."""
     service = board_service
@@ -535,7 +512,6 @@ def test_validate_move_prefix_only(board_service: BoardService):
 
     assert response.is_valid is False  # Not a valid dictionary word
     assert response.word == "COA"
-    assert response.score > 0
 
 
 def test_validate_move_invalid_word(board_service: BoardService):
@@ -558,7 +534,6 @@ def test_validate_move_invalid_word(board_service: BoardService):
     # Since "COB" is not a prefix of any word in our dictionary, it should be invalid
     assert response.is_valid is False  # Not a valid prefix
     assert response.word == "COB"
-    assert response.score > 0  # Still gets a score for the move
 
 
 def test_validate_move_minimum_length(board_service: BoardService):
