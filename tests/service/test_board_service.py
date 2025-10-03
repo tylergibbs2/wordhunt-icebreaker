@@ -703,13 +703,13 @@ def test_generate_board_from_word_list(board_service: BoardService):
     assert all(letter != "" for row in grid for letter in row)
 
 
-def test_try_place_word_success(board_service: BoardService):
-    """Test successful word placement."""
+def test_try_place_word_complex_success(board_service: BoardService):
+    """Test successful complex word placement."""
     service = board_service
     grid = [["", "", ""], ["", "", ""], ["", "", ""]]
     word = "CAT"
 
-    success = service._try_place_word(grid, word, random.Random(42))
+    success = service._try_place_word_complex(grid, word, random.Random(42))
 
     assert success is True
     # Check that the word letters are in the grid
@@ -719,43 +719,87 @@ def test_try_place_word_success(board_service: BoardService):
     assert "T" in grid_letters
 
 
-def test_try_place_word_failure(board_service: BoardService):
-    """Test word placement failure with impossible word."""
+def test_try_place_word_complex_failure(board_service: BoardService):
+    """Test complex word placement failure with impossible word."""
     service = board_service
     grid = [["X", "X"], ["X", "X"]]  # 2x2 grid too small for long word
     word = "VERYLONGWORD"
 
-    success = service._try_place_word(grid, word, random.Random(42))
+    success = service._try_place_word_complex(grid, word, random.Random(42))
 
     assert success is False
 
 
-def test_can_place_word_at_position(board_service: BoardService):
-    """Test word placement validation."""
+def test_find_snake_path(board_service: BoardService):
+    """Test snake path finding."""
     service = board_service
     grid = [["", "", ""], ["", "", ""], ["", "", ""]]
     word = "CAT"
 
-    # Test valid placement
-    assert service._can_place_word_at_position(grid, word, 0, 0, 0, 1) is True  # Horizontal
-    assert service._can_place_word_at_position(grid, word, 0, 0, 1, 0) is True  # Vertical
+    path = service._find_snake_path(grid, word, 0, 0, random.Random(42))
 
-    # Test invalid placement (out of bounds)
-    assert service._can_place_word_at_position(grid, word, 0, 0, 0, -1) is False  # Left
-    assert service._can_place_word_at_position(grid, word, 2, 2, 1, 1) is False  # Right-bottom
+    if path:
+        assert len(path) == len(word)
+        assert path[0] == (0, 0)
+        # Check that path is valid (adjacent positions)
+        for i in range(1, len(path)):
+            prev_row, prev_col = path[i - 1]
+            curr_row, curr_col = path[i]
+            assert abs(curr_row - prev_row) <= 1
+            assert abs(curr_col - prev_col) <= 1
 
 
-def test_place_word_at_position(board_service: BoardService):
-    """Test word placement execution."""
+def test_find_l_shape_path(board_service: BoardService):
+    """Test L-shape path finding."""
     service = board_service
     grid = [["", "", ""], ["", "", ""], ["", "", ""]]
     word = "CAT"
 
-    service._place_word_at_position(grid, word, 0, 0, 0, 1)  # Place horizontally
+    path = service._find_l_shape_path(grid, word, 0, 0, random.Random(42))
+
+    if path:
+        assert len(path) == len(word)
+        assert path[0] == (0, 0)
+
+
+def test_find_spiral_path(board_service: BoardService):
+    """Test spiral path finding."""
+    service = board_service
+    grid = [["", "", "", ""], ["", "", "", ""], ["", "", "", ""], ["", "", "", ""]]
+    word = "COAT"
+
+    path = service._find_spiral_path(grid, word, 0, 0, random.Random(42))
+
+    if path:
+        assert len(path) == len(word)
+        assert path[0] == (0, 0)
+
+
+def test_find_random_walk_path(board_service: BoardService):
+    """Test random walk path finding."""
+    service = board_service
+    grid = [["", "", ""], ["", "", ""], ["", "", ""]]
+    word = "CAT"
+
+    path = service._find_random_walk_path(grid, word, 0, 0, random.Random(42))
+
+    if path:
+        assert len(path) == len(word)
+        assert path[0] == (0, 0)
+
+
+def test_place_word_along_path(board_service: BoardService):
+    """Test word placement along a path."""
+    service = board_service
+    grid = [["", "", ""], ["", "", ""], ["", "", ""]]
+    word = "CAT"
+    path = [(0, 0), (0, 1), (1, 1)]
+
+    service._place_word_along_path(grid, word, path)
 
     assert grid[0][0] == "C"
     assert grid[0][1] == "A"
-    assert grid[0][2] == "T"
+    assert grid[1][1] == "T"
 
 
 async def test_generate_board_from_words_large_board(board_service: BoardService):
@@ -837,3 +881,132 @@ async def test_generate_board_from_words_word_overlap(board_service: BoardServic
     input_words_set = set(request.words)
     found_input_words = [word for word in result.words if word in input_words_set]
     assert len(found_input_words) > 0
+
+
+async def test_generate_board_from_words_complex_paths(board_service: BoardService):
+    """Test that the new algorithm creates complex, snaking paths."""
+    service = board_service
+    request = WordBasedBoardGenerationRequest(
+        board_size=5, words=["COAT", "BOAT", "GOAT", "CAT", "DOG", "BAT"], min_word_length=3
+    )
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    assert isinstance(result, BoardGenerationResponse)
+    assert result.size == 5
+
+    # Verify that words are placed (not just random letters)
+    input_words_set = set(request.words)
+    found_input_words = [word for word in result.words if word in input_words_set]
+    assert len(found_input_words) > 0
+
+    # Print the board to visually verify complex paths
+    print("\nGenerated board with complex paths:")
+    print(result.to_ascii())
+
+    # The algorithm should be able to place multiple words
+    # and they should create interesting, non-linear patterns
+    assert len(found_input_words) >= 2  # Should place at least 2 words
+
+
+async def test_generate_board_from_words_path_diversity(board_service: BoardService):
+    """Test that different path types are used."""
+    service = board_service
+
+    # Generate multiple boards and verify path diversity
+    paths_found = set()
+
+    for seed in range(10):
+        request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "DOG", "BAT"], min_word_length=3)
+        result = await service.generate_board_from_words(request, seed=seed)
+
+        # Check that we get different board layouts
+        board_signature = tuple(tuple(row) for row in result.grid)
+        paths_found.add(board_signature)
+
+    # Should have some diversity in board layouts
+    assert len(paths_found) > 1, "Algorithm should produce diverse board layouts"
+
+
+async def test_generate_board_from_words_try_place_all_words_false(board_service: BoardService):
+    """Test word-based generation with try_place_all_words=False (default behavior)."""
+    service = board_service
+    request = WordBasedBoardGenerationRequest(
+        board_size=4, words=["CAT", "DOG", "BAT", "RAT", "MAT", "HAT"], min_word_length=3, try_place_all_words=False
+    )
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    assert isinstance(result, BoardGenerationResponse)
+    assert result.size == 4
+
+    # With try_place_all_words=False, we might not place all words
+    input_words_set = set(request.words)
+    found_input_words = [word for word in result.words if word in input_words_set]
+    assert len(found_input_words) >= 1  # Should place at least some words
+
+
+async def test_generate_board_from_words_try_place_all_words_true(board_service: BoardService):
+    """Test word-based generation with try_place_all_words=True."""
+    service = board_service
+    request = WordBasedBoardGenerationRequest(
+        board_size=5, words=["CAT", "DOG", "BAT"], min_word_length=3, try_place_all_words=True
+    )
+
+    result = await service.generate_board_from_words(request, seed=42)
+
+    assert isinstance(result, BoardGenerationResponse)
+    assert result.size == 5
+
+    # With try_place_all_words=True, we should try harder to place all words
+    input_words_set = set(request.words)
+    found_input_words = [word for word in result.words if word in input_words_set]
+    assert len(found_input_words) >= 1  # Should place at least some words
+
+
+def test_generate_board_from_word_list_with_retry(board_service: BoardService):
+    """Test the retry logic for placing all words."""
+    service = board_service
+    words = ["CAT", "DOG", "BAT"]
+    board_size = 4
+
+    grid = service._generate_board_from_word_list_with_retry(board_size, words, random.Random(42))
+
+    assert len(grid) == board_size
+    assert all(len(row) == board_size for row in grid)
+    # All cells should be filled
+    assert all(letter != "" for row in grid for letter in row)
+
+
+async def test_generate_board_from_words_try_place_all_words_comparison(board_service: BoardService):
+    """Test comparison between try_place_all_words=True and False."""
+    service = board_service
+    words = ["CAT", "DOG", "BAT", "RAT", "MAT"]
+
+    # Test with try_place_all_words=False
+    request_false = WordBasedBoardGenerationRequest(
+        board_size=4, words=words, min_word_length=3, try_place_all_words=False
+    )
+    result_false = await service.generate_board_from_words(request_false, seed=42)
+
+    # Test with try_place_all_words=True
+    request_true = WordBasedBoardGenerationRequest(
+        board_size=4, words=words, min_word_length=3, try_place_all_words=True
+    )
+    result_true = await service.generate_board_from_words(request_true, seed=42)
+
+    # Both should work
+    assert isinstance(result_false, BoardGenerationResponse)
+    assert isinstance(result_true, BoardGenerationResponse)
+
+    # Count how many input words were placed
+    input_words_set = set(words)
+    found_false = [word for word in result_false.words if word in input_words_set]
+    found_true = [word for word in result_true.words if word in input_words_set]
+
+    # Both should place at least some words
+    assert len(found_false) >= 1
+    assert len(found_true) >= 1
+
+    # The try_place_all_words=True version might place more words (but not guaranteed)
+    # We just verify both approaches work

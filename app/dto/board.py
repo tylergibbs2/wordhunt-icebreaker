@@ -24,6 +24,7 @@ class WordBasedBoardGenerationRequest(BaseModel):
     board_size: int = Field(..., ge=3, le=10, description="Size of the board (3-10)")
     words: list[str] = Field(..., min_length=1, description="List of words to place on the board")
     min_word_length: int = Field(default=3, ge=3, le=15, description="Minimum word length")
+    try_place_all_words: bool = Field(default=False, description="Whether to retry until all words are placed")
 
 
 class BoardGenerationResponse(UnresolvedBoard):

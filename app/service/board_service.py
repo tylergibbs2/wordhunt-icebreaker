@@ -247,7 +247,7 @@ class BoardService:
         return count_score * 0.8 + length_score * 0.2
 
     def _generate_board_from_word_list(self, board_size: int, words: list[str], rng: random.Random) -> list[list[str]]:
-        """Generate a board by placing words from the input list."""
+        """Generate a board by placing words with snaking paths and overlaps."""
         # Initialize empty board
         grid = [["" for _ in range(board_size)] for _ in range(board_size)]
 
@@ -257,7 +257,7 @@ class BoardService:
         placed_words = []
 
         for word in sorted_words:
-            if self._try_place_word(grid, word, rng):
+            if self._try_place_word_complex(grid, word, rng):
                 placed_words.append(word)
 
         # Fill remaining empty cells with random letters
@@ -268,8 +268,56 @@ class BoardService:
 
         return grid
 
-    def _try_place_word(self, grid: list[list[str]], word: str, rng: random.Random, max_attempts: int = 100) -> bool:
-        """Try to place a word on the grid."""
+    def _generate_board_from_word_list_with_retry(
+        self, board_size: int, words: list[str], rng: random.Random, max_attempts: int = 50
+    ) -> list[list[str]]:
+        """Generate a board by placing ALL words from the input list with retry logic."""
+        best_grid = None
+        best_placed_count = 0
+
+        for _ in range(max_attempts):
+            # Initialize empty board
+            grid = [["" for _ in range(board_size)] for _ in range(board_size)]
+
+            # Sort words by length (longest first) to place them more efficiently
+            sorted_words = sorted(words, key=len, reverse=True)
+
+            placed_words = []
+
+            for word in sorted_words:
+                if self._try_place_word_complex(grid, word, rng):
+                    placed_words.append(word)
+
+            # Check if we placed all words
+            if len(placed_words) == len(words):
+                # Fill remaining empty cells with random letters
+                for i in range(board_size):
+                    for j in range(board_size):
+                        if grid[i][j] == "":
+                            grid[i][j] = self._generate_random_letter(rng)
+                return grid
+
+            # Keep track of the best attempt so far
+            if len(placed_words) > best_placed_count:
+                best_placed_count = len(placed_words)
+                best_grid = [row[:] for row in grid]  # Deep copy
+
+        # If we couldn't place all words, return the best attempt
+        if best_grid is not None:
+            # Fill remaining empty cells with random letters
+            for i in range(board_size):
+                for j in range(board_size):
+                    if best_grid[i][j] == "":
+                        best_grid[i][j] = self._generate_random_letter(rng)
+            return best_grid
+
+        # Fallback: return a board with random letters
+        return self._generate_board(board_size, rng)
+
+    def _try_place_word_complex(
+        self, grid: list[list[str]], word: str, rng: random.Random, max_attempts: int = 200
+    ) -> bool:
+        """Try to place a word with complex snaking paths and overlaps."""
         board_size = len(grid)
         word = word.upper()
 
@@ -278,46 +326,244 @@ class BoardService:
             start_row = rng.randrange(board_size)
             start_col = rng.randrange(board_size)
 
-            # Try different directions
-            directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-            rng.shuffle(directions)
-
-            for dx, dy in directions:
-                if self._can_place_word_at_position(grid, word, start_row, start_col, dx, dy):
-                    self._place_word_at_position(grid, word, start_row, start_col, dx, dy)
-                    return True
+            # Try to find a path for the word
+            path = self._find_word_path(grid, word, start_row, start_col, rng)
+            if path:
+                self._place_word_along_path(grid, word, path)
+                return True
 
         return False
 
-    def _can_place_word_at_position(
-        self, grid: list[list[str]], word: str, row: int, col: int, dx: int, dy: int
-    ) -> bool:
-        """Check if a word can be placed at the given position and direction."""
+    def _find_word_path(
+        self, grid: list[list[str]], word: str, start_row: int, start_col: int, rng: random.Random
+    ) -> list[tuple[int, int]] | None:
+        """Find a snaking path for a word starting at the given position."""
+        word = word.upper()
+
+        # Try different path-finding strategies
+        strategies = [
+            self._find_snake_path,
+            self._find_l_shape_path,
+            self._find_spiral_path,
+            self._find_random_walk_path,
+        ]
+
+        rng.shuffle(strategies)
+
+        for strategy in strategies:
+            path = strategy(grid, word, start_row, start_col, rng)
+            if path and len(path) == len(word):
+                return path
+
+        return None
+
+    def _find_snake_path(
+        self, grid: list[list[str]], word: str, start_row: int, start_col: int, rng: random.Random
+    ) -> list[tuple[int, int]] | None:
+        """Find a snake-like path for the word."""
         board_size = len(grid)
+        word = word.upper()
 
-        # Check if the word fits within the board bounds
-        end_row = row + (len(word) - 1) * dx
-        end_col = col + (len(word) - 1) * dy
+        # Start with a random direction
+        directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        rng.shuffle(directions)
 
-        if end_row < 0 or end_row >= board_size or end_col < 0 or end_col >= board_size:
-            return False
+        for initial_dx, initial_dy in directions:
+            path = [(start_row, start_col)]
+            current_row, current_col = start_row, start_col
+            dx, dy = initial_dx, initial_dy
 
-        # Check if all positions are either empty or match the word letters
-        for i, letter in enumerate(word):
-            check_row = row + i * dx
-            check_col = col + i * dy
+            for i in range(1, len(word)):
+                # Try to continue in the same direction first
+                next_row, next_col = current_row + dx, current_col + dy
 
-            if grid[check_row][check_col] != "" and grid[check_row][check_col] != letter:
-                return False
+                if (
+                    0 <= next_row < board_size
+                    and 0 <= next_col < board_size
+                    and (next_row, next_col) not in path
+                    and (grid[next_row][next_col] == "" or grid[next_row][next_col] == word[i])
+                ):
+                    path.append((next_row, next_col))
+                    current_row, current_col = next_row, next_col
+                else:
+                    # Try to turn (change direction)
+                    turn_directions = [(dy, -dx), (-dy, dx), (-dx, -dy), (dx, dy)]
+                    rng.shuffle(turn_directions)
 
-        return True
+                    placed = False
+                    for new_dx, new_dy in turn_directions:
+                        next_row, next_col = current_row + new_dx, current_col + new_dy
+                        if (
+                            0 <= next_row < board_size
+                            and 0 <= next_col < board_size
+                            and (next_row, next_col) not in path
+                            and (grid[next_row][next_col] == "" or grid[next_row][next_col] == word[i])
+                        ):
+                            path.append((next_row, next_col))
+                            current_row, current_col = next_row, next_col
+                            dx, dy = new_dx, new_dy
+                            placed = True
+                            break
 
-    def _place_word_at_position(self, grid: list[list[str]], word: str, row: int, col: int, dx: int, dy: int) -> None:
-        """Place a word at the given position and direction."""
-        for i, letter in enumerate(word):
-            place_row = row + i * dx
-            place_col = col + i * dy
-            grid[place_row][place_col] = letter
+                    if not placed:
+                        break
+
+            if len(path) == len(word):
+                return path
+
+        return None
+
+    def _find_l_shape_path(
+        self, grid: list[list[str]], word: str, start_row: int, start_col: int, rng: random.Random
+    ) -> list[tuple[int, int]] | None:
+        """Find an L-shaped path for the word."""
+        board_size = len(grid)
+        word = word.upper()
+
+        if len(word) < 3:
+            return None
+
+        # Try different L-shape orientations
+        orientations = [
+            # Horizontal then vertical down
+            ([(0, 1), (1, 0)]),
+            # Horizontal then vertical up
+            ([(0, 1), (-1, 0)]),
+            # Vertical then horizontal right
+            ([(1, 0), (0, 1)]),
+            # Vertical then horizontal left
+            ([(1, 0), (0, -1)]),
+        ]
+
+        rng.shuffle(orientations)
+
+        for directions in orientations:
+            path = [(start_row, start_col)]
+            current_row, current_col = start_row, start_col
+
+            # Split the word between the two directions
+            mid_point = len(word) // 2
+
+            # First direction
+            dx, dy = directions[0]
+            for i in range(1, mid_point + 1):
+                next_row, next_col = current_row + dx, current_col + dy
+                if (
+                    0 <= next_row < board_size
+                    and 0 <= next_col < board_size
+                    and (next_row, next_col) not in path
+                    and (grid[next_row][next_col] == "" or grid[next_row][next_col] == word[i])
+                ):
+                    path.append((next_row, next_col))
+                    current_row, current_col = next_row, next_col
+                else:
+                    break
+
+            # Second direction
+            if len(path) == mid_point + 1:
+                dx, dy = directions[1]
+                for i in range(mid_point + 1, len(word)):
+                    next_row, next_col = current_row + dx, current_col + dy
+                    if (
+                        0 <= next_row < board_size
+                        and 0 <= next_col < board_size
+                        and (next_row, next_col) not in path
+                        and (grid[next_row][next_col] == "" or grid[next_row][next_col] == word[i])
+                    ):
+                        path.append((next_row, next_col))
+                        current_row, current_col = next_row, next_col
+                    else:
+                        break
+
+            if len(path) == len(word):
+                return path
+
+        return None
+
+    def _find_spiral_path(
+        self, grid: list[list[str]], word: str, start_row: int, start_col: int, rng: random.Random
+    ) -> list[tuple[int, int]] | None:
+        """Find a spiral path for the word."""
+        board_size = len(grid)
+        word = word.upper()
+
+        if len(word) < 4:
+            return None
+
+        # Try different spiral directions
+        spiral_directions = [
+            [(0, 1), (1, 0), (0, -1), (-1, 0)],  # Right, down, left, up
+            [(1, 0), (0, 1), (-1, 0), (0, -1)],  # Down, right, up, left
+            [(0, -1), (-1, 0), (0, 1), (1, 0)],  # Left, up, right, down
+            [(-1, 0), (0, -1), (1, 0), (0, 1)],  # Up, left, down, right
+        ]
+
+        rng.shuffle(spiral_directions)
+
+        for directions in spiral_directions:
+            path = [(start_row, start_col)]
+            current_row, current_col = start_row, start_col
+
+            for i in range(1, len(word)):
+                # Cycle through directions
+                direction_index = (i - 1) % len(directions)
+                dx, dy = directions[direction_index]
+
+                next_row, next_col = current_row + dx, current_col + dy
+                if (
+                    0 <= next_row < board_size
+                    and 0 <= next_col < board_size
+                    and (next_row, next_col) not in path
+                    and (grid[next_row][next_col] == "" or grid[next_row][next_col] == word[i])
+                ):
+                    path.append((next_row, next_col))
+                    current_row, current_col = next_row, next_col
+                else:
+                    break
+
+            if len(path) == len(word):
+                return path
+
+        return None
+
+    def _find_random_walk_path(
+        self, grid: list[list[str]], word: str, start_row: int, start_col: int, rng: random.Random
+    ) -> list[tuple[int, int]] | None:
+        """Find a random walk path for the word."""
+        board_size = len(grid)
+        word = word.upper()
+
+        path = [(start_row, start_col)]
+        current_row, current_col = start_row, start_col
+
+        for i in range(1, len(word)):
+            # Get all possible next positions
+            directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+            rng.shuffle(directions)
+
+            placed = False
+            for dx, dy in directions:
+                next_row, next_col = current_row + dx, current_col + dy
+                if (
+                    0 <= next_row < board_size
+                    and 0 <= next_col < board_size
+                    and (next_row, next_col) not in path
+                    and (grid[next_row][next_col] == "" or grid[next_row][next_col] == word[i])
+                ):
+                    path.append((next_row, next_col))
+                    current_row, current_col = next_row, next_col
+                    placed = True
+                    break
+
+            if not placed:
+                break
+
+        return path if len(path) == len(word) else None
+
+    def _place_word_along_path(self, grid: list[list[str]], word: str, path: list[tuple[int, int]]) -> None:
+        """Place a word along the given path."""
+        for i, (row, col) in enumerate(path):
+            grid[row][col] = word[i]
 
     def _find_words_from_list(self, grid: list[list[str]], word_list: list[str], min_length: int = 3) -> set[str]:
         """Find all words on the board from a specific word list."""
@@ -461,7 +707,10 @@ class BoardService:
             raise ValueError(f"No valid words found with minimum length {request.min_word_length}")
 
         # Try to place words on the board
-        grid = self._generate_board_from_word_list(request.board_size, valid_words, rng)
+        if request.try_place_all_words:
+            grid = self._generate_board_from_word_list_with_retry(request.board_size, valid_words, rng)
+        else:
+            grid = self._generate_board_from_word_list(request.board_size, valid_words, rng)
 
         # Find all words on the board using only the input word list
         found_words = sorted(self._find_words_from_list(grid, valid_words, request.min_word_length))
@@ -474,7 +723,10 @@ class BoardService:
             # If we found words not in the input list, try to regenerate
             # This can happen if random letters form unintended words
             for _ in range(10):  # Try up to 10 times
-                grid = self._generate_board_from_word_list(request.board_size, valid_words, rng)
+                if request.try_place_all_words:
+                    grid = self._generate_board_from_word_list_with_retry(request.board_size, valid_words, rng)
+                else:
+                    grid = self._generate_board_from_word_list(request.board_size, valid_words, rng)
                 found_words = sorted(self._find_words_from_list(grid, valid_words, request.min_word_length))
                 invalid_words = [word for word in found_words if word not in input_words_set]
                 if not invalid_words:

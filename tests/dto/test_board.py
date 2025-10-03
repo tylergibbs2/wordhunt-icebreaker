@@ -137,3 +137,18 @@ def test_word_based_board_generation_request_word_filtering():
         board_size=4, words=["CAT", "DOG", "BAT", "RAT", "COAT"], min_word_length=4
     )
     assert request.words == ["CAT", "DOG", "BAT", "RAT", "COAT"]  # All words >= 4 chars
+
+
+def test_word_based_board_generation_request_try_place_all_words():
+    """Test the try_place_all_words parameter."""
+    # Test default value
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "DOG"])
+    assert request.try_place_all_words is False  # Default value
+
+    # Test explicit True
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "DOG"], try_place_all_words=True)
+    assert request.try_place_all_words is True
+
+    # Test explicit False
+    request = WordBasedBoardGenerationRequest(board_size=4, words=["CAT", "DOG"], try_place_all_words=False)
+    assert request.try_place_all_words is False
